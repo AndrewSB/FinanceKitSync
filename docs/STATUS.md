@@ -20,16 +20,29 @@ long pole (the entitlement) is independent of everything and should start now.
 ## Critical path
 
 ```
-FinanceKit entitlement request ──────────────────────► approval ──► App Review
-        (file today, days-to-weeks, out of our hands)
-A: iOS app ──┐
-             ├──► end-to-end verified ──► C: landing page
+Confirm account type ──► (maybe: convert to Organization, weeks, D-U-N-S)
+        │
+        ▼
+Add financial-management surface ──► app record + listing ──► entitlement
+        │                                                        request
+        │                                                           │
+        │                              (days-to-weeks, Apple's call)│
+        ▼                                                           ▼
+A: iOS app ──┐                                                  approval
+             ├──► verified on device ──► C: landing page ──► App Review
 B: server ───┘
 ```
 
-Nothing in A, B, or C is blocked by the entitlement. A development build runs on
-a registered device under a personal team without it — only **distribution**
-requires approval. Do not let the wait idle the other streams.
+**Correction to an earlier assumption in this file:** a development build does
+*not* run on a device without the entitlement. Measured — signing fails with
+`Provisioning profile ... doesn't include the FinanceKit capability` and
+`Entitlement com.apple.developer.financekit requires approval from Apple`. The
+only way to get a build onto hardware today is the unentitled variant
+(`app/Supporting/FinanceKitSync-Unentitled.entitlements`), which installs and
+runs but reads no financial data. So the entitlement gates *device testing*,
+not just distribution.
+
+A and B are otherwise independent and can progress; C depends on both.
 
 ## Decisions made
 
