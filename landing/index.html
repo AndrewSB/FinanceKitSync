@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FinanceKitSync — your transactions, your server</title>
+<meta name="description" content="An iPhone app that mirrors your Apple Card, Apple Cash, and Apple Pay transactions to a server you control. No account, no hosted backend, no third party.">
+<meta property="og:title" content="FinanceKitSync">
+<meta property="og:description" content="Your Apple Card transactions, on a server you control.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔁</text></svg>">
+<style>
+  :root {
+    --bg: #fbfaf8;
+    --surface: #ffffff;
+    --border: #e5e1da;
+    --text: #1c1a17;
+    --muted: #6b6560;
+    --accent: #2e7a5a;
+    --accent-soft: #eaf4ef;
+    --code-bg: #f4f2ee;
+    --warn-bg: #fdf6e8;
+    --warn-border: #e8d7ae;
+    --radius: 12px;
+    --maxw: 46rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161815;
+      --surface: #1d201d;
+      --border: #2f342f;
+      --text: #eceae6;
+      --muted: #9a978f;
+      --accent: #6fd3a4;
+      --accent-soft: #1c2b24;
+      --code-bg: #22261f;
+      --warn-bg: #2a2418;
+      --warn-border: #4a3f26;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161815; --surface: #1d201d; --border: #2f342f; --text: #eceae6;
+    --muted: #9a978f; --accent: #6fd3a4; --accent-soft: #1c2b24;
+    --code-bg: #22261f; --warn-bg: #2a2418; --warn-border: #4a3f26;
+  }
+  :root[data-theme="light"] {
+    --bg: #fbfaf8; --surface: #ffffff; --border: #e5e1da; --text: #1c1a17;
+    --muted: #6b6560; --accent: #2e7a5a; --accent-soft: #eaf4ef;
+    --code-bg: #f4f2ee; --warn-bg: #fdf6e8; --warn-border: #e8d7ae;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 1.25rem; }
+
+  h1, h2, h3 { line-height: 1.25; letter-spacing: -0.015em; }
+  h1 { font-size: clamp(2rem, 6vw, 2.9rem); margin: 0 0 .6rem; }
+  h2 { font-size: 1.45rem; margin: 3.2rem 0 1rem; }
+  h3 { font-size: 1.05rem; margin: 1.8rem 0 .5rem; }
+  p { margin: 0 0 1rem; }
+  a { color: var(--accent); }
+
+  header {
+    padding: 4.5rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .tagline { font-size: 1.15rem; color: var(--muted); margin-bottom: 1.75rem; }
+  .badge {
+    display: inline-block; font-size: .78rem; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px;
+    padding: .3rem .75rem; margin-bottom: 1.1rem; font-weight: 600;
+  }
+  .cta { display: flex; flex-wrap: wrap; gap: .7rem; }
+  .btn {
+    display: inline-block; padding: .65rem 1.15rem; border-radius: 8px;
+    text-decoration: none; font-weight: 550; font-size: .95rem;
+    border: 1px solid var(--border); color: var(--text); background: var(--surface);
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+  .flow {
+    display: grid; gap: .5rem; margin: 1.5rem 0 0;
+    grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch;
+  }
+  .flow .node {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem .85rem; text-align: center;
+  }
+  .flow .node strong { display: block; font-size: .93rem; margin-bottom: .2rem; }
+  .flow .node span { font-size: .8rem; color: var(--muted); }
+  .flow .arrow {
+    display: flex; align-items: center; color: var(--muted); font-size: 1.1rem;
+  }
+  @media (max-width: 34rem) {
+    .flow { grid-template-columns: 1fr; }
+    .flow .arrow { justify-content: center; transform: rotate(90deg); }
+  }
+
+  ul.plain { list-style: none; padding: 0; margin: 0; }
+  ul.plain li {
+    padding: .55rem 0 .55rem 1.6rem; position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+  ul.plain li:last-child { border-bottom: 0; }
+  ul.plain li::before {
+    content: "→"; position: absolute; left: 0; color: var(--accent);
+  }
+  ul.plain li.no::before { content: "×"; color: var(--muted); }
+
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem; overflow-x: auto;
+    font-size: .85rem; line-height: 1.55;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  code { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; font-size: .88em; }
+  p code, li code, td code { background: var(--code-bg); padding: .12em .38em; border-radius: 4px; }
+
+  .note {
+    background: var(--warn-bg); border: 1px solid var(--warn-border);
+    border-radius: var(--radius); padding: 1rem 1.15rem; margin: 1.5rem 0;
+    font-size: .93rem;
+  }
+  .note strong { display: block; margin-bottom: .3rem; }
+
+  .table-scroll { overflow-x: auto; margin: 1rem 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; color: var(--muted); font-size: .82rem; text-transform: uppercase; letter-spacing: .03em; }
+
+  details {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: .85rem 1rem; margin: .6rem 0; background: var(--surface);
+  }
+  summary { cursor: pointer; font-weight: 550; }
+  details[open] summary { margin-bottom: .7rem; }
+
+  footer {
+    margin-top: 4rem; padding: 2rem 0 3rem;
+    border-top: 1px solid var(--border); color: var(--muted); font-size: .88rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="badge">Not yet released</span>
+    <h1>Your transactions, your server.</h1>
+    <p class="tagline">
+      FinanceKitSync copies your Apple&nbsp;Card, Apple&nbsp;Cash, and Apple&nbsp;Pay
+      transaction history to a machine you control. No account. No backend of ours.
+      Nothing in the middle.
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/AndrewSB/FinanceKitSync">Source on GitHub</a>
+      <a class="btn" href="#run-a-server">Run the server</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <h2>How it works</h2>
+
+  <div class="flow">
+    <div class="node">
+      <strong>Your iPhone</strong>
+      <span>FinanceKit reads your history</span>
+    </div>
+    <div class="arrow">→</div>
+    <div class="node">
+      <strong>Encrypted POST</strong>
+      <span>TLS, bearer token</span>
+    </div>
+    <div class="arrow">→</div>
+    <div class="node">
+      <strong>Your server</strong>
+      <span>SQLite you own</span>
+    </div>
+  </div>
+
+  <p style="margin-top:1.5rem">
+    The app asks iOS for permission to read financial data, walks your entire
+    transaction history, and sends anything your server hasn't already
+    acknowledged. It keeps a small local record of what it has delivered, so a
+    second sync sends only what changed — and a corrected amount or a
+    pending&nbsp;→&nbsp;posted flip counts as a change.
+  </p>
+
+  <p>
+    That's the whole app. It doesn't categorize, budget, chart, or advise. It
+    moves your data to where you can do those things yourself.
+  </p>
+
+  <h2>What gets sent</h2>
+
+  <p>Every field Apple exposes, per transaction:</p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th>Field</th><th>Example</th></tr>
+    <tr><td>Amount &amp; currency</td><td><code>-42.10 USD</code></td></tr>
+    <tr><td>Transaction &amp; posted date</td><td><code>2026-08-01T12:00:00Z</code></td></tr>
+    <tr><td>Merchant name &amp; description</td><td><code>BLUE BOTTLE COFFEE</code></td></tr>
+    <tr><td>Merchant category code</td><td><code>5814</code></td></tr>
+    <tr><td>Status</td><td><code>posted</code> / <code>pending</code></td></tr>
+    <tr><td>Transaction type</td><td><code>pointOfSale</code>, <code>refund</code>, …</td></tr>
+    <tr><td>Foreign amount &amp; FX rate</td><td><code>38.20 EUR @ 1.102</code></td></tr>
+    <tr><td>Account &amp; institution</td><td><code>Apple Card · Goldman Sachs</code></td></tr>
+  </table>
+  </div>
+
+  <h3>What stays on your phone</h3>
+  <p>
+    Only bookkeeping. For each transaction already delivered, the app stores an
+    identifier, a SHA-256 checksum used to notice corrections, and a timestamp.
+    No amounts. No merchants. If someone dumped that database, they'd learn
+    how many transactions you have and nothing else.
+  </p>
+
+  <h3>What we receive</h3>
+  <p><strong>Nothing.</strong> There is no “we”. There is no server to receive it.</p>
+
+  <h2 id="run-a-server">Running a server</h2>
+
+  <p>
+    You need somewhere for the data to land. The receiver is about 200 lines of
+    Python — FastAPI in front of a SQLite file — and runs anywhere Docker does:
+    a VPS, a home server, a Raspberry Pi, a spare laptop.
+  </p>
+
+<pre><code>git clone https://github.com/AndrewSB/FinanceKitSync
+cd FinanceKitSync/server
+
+# Generate a token and start it
+printf 'FKS_TOKEN=%s\n' "$(openssl rand -hex 20)" > .env
+mkdir -p data && chown -R 10001:10001 data
+docker compose up -d --build
+
+curl http://127.0.0.1:8501/health
+# {"status":"ok","schema_version":1}</code></pre>
+
+  <p>
+    Then put it behind HTTPS — the app refuses plain <code>http://</code>. Any
+    reverse proxy with a real certificate works. If you'd rather not open a port
+    or manage DNS, Tailscale Funnel does both in one command:
+  </p>
+
+<pre><code>tailscale funnel --bg --https=8443 http://127.0.0.1:8501</code></pre>
+
+  <div class="note">
+    <strong>Funnel is per-port, not per-path.</strong>
+    Enabling it publishes <em>every</em> route already served on that port, and
+    turning it back off deletes the port's whole configuration. Check
+    <code>tailscale serve status</code> before you enable it, and pick a port
+    nothing else is using.
+  </div>
+
+  <p>
+    Enter the resulting URL and your token in the app under
+    <em>Connect your server</em>, tap <em>Test connection</em>, and you're done.
+  </p>
+
+  <h2>Honest limitations</h2>
+
+  <ul class="plain">
+    <li class="no">You need to run a server. There's no hosted option, and there won't be.</li>
+    <li class="no">Only what FinanceKit exposes — Apple Card, Apple Cash, and Apple Pay. Not your other banks.</li>
+    <li class="no">Background syncs happen when iOS decides, not on a schedule. Open the app and pull to refresh when you want it now.</li>
+    <li class="no">iPhone only. FinanceKit doesn't exist on Mac, iPad, or Android.</li>
+    <li class="no">Your server holds your complete transaction history. Securing and backing it up is on you.</li>
+  </ul>
+
+  <h2>Questions</h2>
+
+  <details>
+    <summary>Can you see my transactions?</summary>
+    <p>
+      No, and not as a policy promise — as an architectural fact. The app has
+      exactly one network destination: the URL you type in. There are no
+      analytics, no crash reporting, and no third-party SDKs. You can verify
+      this; the source is public.
+    </p>
+  </details>
+
+  <details>
+    <summary>What if my server is down?</summary>
+    <p>
+      Nothing is lost. The app only marks a transaction as delivered after your
+      server confirms it, so anything unacknowledged is retried on the next
+      sync. A server that's offline for a week catches up in one run.
+    </p>
+  </details>
+
+  <details>
+    <summary>What if I rebuild my server and lose the database?</summary>
+    <p>
+      Use <em>Re-send everything</em> in Settings. It clears the local delivery
+      record so the next sync replays your full history. The server stores
+      transactions keyed on their identifier and updates in place, so replays
+      never create duplicates.
+    </p>
+  </details>
+
+  <details>
+    <summary>How far back does it go?</summary>
+    <p>
+      As far as FinanceKit does — typically your whole history with the account.
+      The first sync sends all of it, which can be thousands of transactions;
+      after that it's just what changed.
+    </p>
+  </details>
+
+  <details>
+    <summary>Is this related to LunchSync?</summary>
+    <p>
+      Yes. This started as an optional feature inside
+      <a href="https://github.com/milanave/LunchSync">LunchSync</a>, which syncs
+      the same data to Lunch Money specifically. It was split out, with that
+      project's owner's agreement, because “send it to one budgeting service”
+      and “send it wherever I want” are different products.
+    </p>
+  </details>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <a href="https://github.com/AndrewSB/FinanceKitSync">GitHub</a> ·
+      <a href="https://github.com/AndrewSB/FinanceKitSync/blob/main/docs/SPEC.md">Technical spec</a> ·
+      <a href="https://github.com/AndrewSB/FinanceKitSync/issues">Issues</a>
+    </p>
+    <p>
+      MIT licensed. Not affiliated with Apple. Apple Card, Apple Cash, and
+      Apple Pay are trademarks of Apple Inc.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
