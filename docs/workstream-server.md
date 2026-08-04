@@ -5,17 +5,30 @@
 | | |
 |---|---|
 | Host | `box` (Ubuntu 24.04, root, Docker installed) |
-| Tailnet name | `box.tail590aa.ts.net` |
-| Tailnet IP | `100.84.140.74` |
-| Public URL | `https://box.tail590aa.ts.net:8443` (Tailscale Funnel) |
+| Tailnet name | `$FKS_HOST` — see [Host names](#host-names) |
+| Public URL | `https://$FKS_HOST:8443` (Tailscale Funnel) |
 | Local bind | `127.0.0.1:8501` |
 | Deploy path | `/opt/financekitsync` |
 | Data path | `/opt/financekitsync/data/financekitsync.db` |
 
-`box` is behind NAT — egress `187.77.195.103`, nothing inbound but sshd. Funnel
-is the only practical path to public HTTPS, and it is already enabled on this
-tailnet (funnel-capable ports: **443, 8443, 10000**; 443 and 10000 are taken by
-existing services, **8443 is free**).
+`box` is behind NAT, nothing inbound but sshd. Funnel is the only practical path
+to public HTTPS, and it is already enabled on this tailnet (funnel-capable
+ports: **443, 8443, 10000**; 443 and 10000 are taken by existing services,
+**8443 is free**).
+
+### Host names
+
+This repo is public, so it never spells out the tailnet name, the tailnet IP, or
+the egress IP — a Funnel endpoint is publicly routable by design, and naming it
+here turns an unguessable host into a documented target. Docs and scripts use
+`$FKS_HOST` (or `box.example.ts.net` where a literal is needed for illustration).
+
+Get the real value locally with `tailscale status --json | jq -r .Self.DNSName`,
+and export it before following any command below:
+
+```bash
+export FKS_HOST="$(tailscale status --json | jq -r '.Self.DNSName | sub("\\.$";"")')"
+```
 
 > Andrew noted there is already a public reachable API endpoint on `box`, and
 > that folding this in as an additional route there is preferable long-term. v1
@@ -60,7 +73,7 @@ Rotation: change `FKS_TOKEN`, restart, update the token in the app.
 3. `docker compose up -d --build`
 4. `tailscale serve --bg --https 8443 http://127.0.0.1:8501`
 5. `tailscale funnel --bg --https 8443 on`
-6. Verify: `curl https://box.tail590aa.ts.net:8443/health` from off-tailnet
+6. Verify: `curl "https://$FKS_HOST:8443/health"` from off-tailnet
 
 ## Verification checklist
 

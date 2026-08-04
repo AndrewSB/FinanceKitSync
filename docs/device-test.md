@@ -26,9 +26,10 @@ genuinely most of it, and worth doing now.
 1. **Plug the iPhone into the Mac** (or pair it for wireless debugging). As of
    the last check no physical device was connected — only simulators.
 2. **Bring the phone onto the tailnet.** `box` currently serves
-   `https://box.tail590aa.ts.net:8443` **tailnet-only**, so the phone needs the
-   Tailscale app connected. The node `iphone184` exists but was last seen a day
-   ago. Alternative: enable Funnel on 8443 — but read the warning in
+   `https://$FKS_HOST:8443` **tailnet-only** (see
+   [Host names](workstream-server.md#host-names)), so the phone needs the
+   Tailscale app connected and joined to the tailnet.
+   Alternative: enable Funnel on 8443 — but read the warning in
    `server/deploy.sh` first, because that port also serves an unrelated `/api`
    route that would become public.
 
