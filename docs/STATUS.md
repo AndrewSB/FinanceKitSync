@@ -118,26 +118,51 @@ Net: risk has shifted almost entirely onto the **account type**.
 
 2. **Financial management tools.** Covered below — the app doesn't provide them.
 
+### Converting Individual → Organization
+
+Apple supports converting an existing membership rather than enrolling a second
+one. Confirmed 2026-08-04:
+
+| | |
+|---|---|
+| Cost | **No separate conversion fee.** The membership is $99/year for both Individual and Organization — you are not charged twice. |
+| Caveat | Apple doesn't refund the unused portion of the current Individual year. So the real cost is $0 extra, not $200. |
+| Requirements | Submit a request to Apple; be the organization's **founder or co-founder**; supply the **D-U-N-S number** |
+| Andrew's status | D-U-N-S number **already in hand** |
+
+The open question is whether conversion **preserves Team ID `A29347X2JZ`**. If it
+does, nothing built so far moves: the bundle ID, the App Store Connect record
+(created 2026-08-04), and possibly the pending entitlement request all carry
+over. If instead Apple requires a fresh enrolment, the bundle ID and app record
+have to be transferred. Ask explicitly — it's the difference between zero
+rework and a migration.
+
 ### Next action: ask Apple directly
 
-Contact Apple Developer Support citing `453VPT726K`:
+Contact Apple Developer Support. Draft:
 
-1. Does the FinanceKit entitlement require an organization-level account?
-2. If so, what is the path from an Individual account — conversion, or a new
-   enrolment?
-
-This is authoritative, free, and takes a day or two. It decides whether the next
-few weeks are "build features" or "form a legal entity, get a D-U-N-S number,
-enrol".
-
-> **Hold off on creating the App Store Connect app record until Support
-> answers.** If a *new* organization account is required, that's a different
-> Team ID, and a record created now under `A29347X2JZ` would need transferring
-> or recreating.
+> My FinanceKit entitlement request `453VPT726K` (Team ID `A29347X2JZ`, bundle
+> ID `com.asb.FinanceKitSync`) is currently filed under an Individual account.
 >
-> Note also: the App Store Connect API does **not** expose app-record creation,
-> so that first step is manual regardless (tools like `fastlane produce` drive
-> the web session with an Apple ID and password). Everything after the record
+> 1. Does the FinanceKit entitlement require an organization-level membership?
+> 2. If so, I would like to convert my existing Individual membership to an
+>    Organization membership. I have a D-U-N-S number and am the founder of the
+>    entity. What do you need from me?
+> 3. Does that conversion preserve my Team ID, bundle identifiers, and existing
+>    App Store Connect app records — or will they need to be transferred?
+> 4. Will request `453VPT726K` remain valid through the conversion, or should I
+>    re-file it afterwards?
+
+Questions 3 and 4 are the ones that decide how much rework there is. Free,
+authoritative, a day or two.
+
+> **App Store Connect record: created 2026-08-04** under `A29347X2JZ`. If
+> conversion preserves the Team ID this needs no action; otherwise it gets
+> transferred. Andrew has confirmed he's fine either way.
+>
+> Note: the App Store Connect API does **not** expose app-record creation, so
+> that first step is manual regardless (tools like `fastlane produce` drive the
+> web session with an Apple ID and password). Everything after the record
 > exists — metadata, versions, TestFlight, builds — is API-automatable.
 
 Version B was submitted knowingly, with the qualification risk below understood.
