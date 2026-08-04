@@ -1,0 +1,22 @@
+{
+  "bundleId": "com.asb.FinanceKitSync",
+  "locale": "en-US",
+
+  "name": "FinanceKit Sync",
+  "subtitle": "Your transactions, your server",
+
+  "primaryCategory": "FINANCE",
+  "secondaryCategory": "UTILITIES",
+
+  "privacyPolicyUrl": "",
+  "supportUrl": "",
+  "marketingUrl": "",
+
+  "promotionalText": "Copy your Apple Card, Apple Cash, and Apple Pay transactions to a server you run. No account, no hosted backend, nothing in between.",
+
+  "keywords": "financekit,apple card,export,transactions,self-hosted,sync,backup,privacy,wallet,api",
+
+  "description": "Your Apple Card, Apple Cash, and Apple Pay transactions belong to you. FinanceKit Sync puts them somewhere you can actually use them.\n\nPoint it at a server you run, and it copies your transaction history there — your full history, not just the last month — and keeps it current as new charges post. What you build on top of that is up to you: a database, a spreadsheet, a budgeting tool, a dashboard, a personal archive.\n\nHOW IT WORKS\n• Your transactions are read on your iPhone, using Apple's FinanceKit framework.\n• They're sent over an encrypted connection to the address you enter.\n• Nothing goes anywhere else. There is no account and no service in between.\n\nWHAT'S SENT\nEvery field available: amount, currency, date, posted date, merchant name and category code, transaction type, pending or posted status, and foreign currency amounts and exchange rates where applicable.\n\nWHAT'S STORED ON YOUR PHONE\nOnly a record of what has already been delivered — an identifier and a checksum per transaction. No amounts. No merchant names.\n\nNO EXTRA LAYER\nThis app does not budget, categorize, or analyze. It reads what Apple exposes and forwards it, faithfully and completely. That is the entire product.\n\nYOU NEED YOUR OWN SERVER\nFinanceKit Sync does not come with one, and there is no hosted option. The setup guide covers running the open-source receiver on any machine you control. If you would rather not run a server, this app is not for you.\n\nOpen source: github.com/AndrewSB/FinanceKitSync",
+
+  "whatsNew": "First release."
+}

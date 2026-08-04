@@ -19,3 +19,8 @@ DerivedData/
 
 # macOS
 .DS_Store
+
+# App Store Connect API keys — never commit
+*.p8
+AuthKey_*.p8
+.env.asc
