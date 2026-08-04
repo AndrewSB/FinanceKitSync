@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Signing entitlements WITHOUT com.apple.developer.financekit.
+
+  Until Apple approves the FinanceKit request for team A29347X2JZ / bundle ID
+  com.asb.FinanceKitSync, any device or Xcode Cloud build using the real
+  entitlements file fails to sign:
+
+    error: Entitlement com.apple.developer.financekit requires approval from
+    Apple to include in a profile.
+
+  Building with this file instead lets the app compile, sign, and install so CI
+  and the build pipeline can be validated. The app will launch and the UI will
+  work, but FinanceStore.isDataAvailable returns false, so no transactions are
+  read and syncing does nothing useful.
+
+  Use it via:
+    xcodebuild ... CODE_SIGN_ENTITLEMENTS=Supporting/FinanceKitSync-Unentitled.entitlements
+
+  DELETE THE OVERRIDE once the entitlement is approved. Do not ship a build
+  signed with this file.
+-->
+<plist version="1.0">
+<dict/>
+</plist>

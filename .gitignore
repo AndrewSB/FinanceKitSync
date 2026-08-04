@@ -1,0 +1,21 @@
+# Secrets — the deployed token lives only on the server
+server/.env
+server/data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Xcode
+app/**/xcuserdata/
+app/**/*.xcworkspace/xcuserdata/
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.app.dSYM.zip
+
+# macOS
+.DS_Store
