@@ -10,11 +10,33 @@ written out below, so it should be copy-and-paste rather than decision-making.
 
 ---
 
-## Order of operations
+## Do I submit the app first, or just the entitlement?
 
-Apple's FinanceKit criteria require the app to be *"listed in the Finance
-category in App Store Connect"*, so the app record has to exist **before** the
-entitlement request — not after. That's the opposite of the usual order.
+**Just the entitlement. Do not submit the app first — you can't.**
+
+Without the entitlement, the binary won't even build: signing fails with
+*"Entitlement com.apple.developer.financekit requires approval from Apple."*
+So there is no archive to submit. The entitlement is granted per bundle ID
+precisely so that you can *then* produce the build you eventually submit.
+
+What confuses this is Apple's wording — the criteria say your app must be
+*"listed in the Finance category in App Store Connect and distributed through
+the App Store for iPhone in the United States or United Kingdom."* Read
+literally that's circular. In practice it describes **intended** distribution:
+Apple grants the entitlement so you can build, and verifies the rest at App
+Review.
+
+What that means concretely: you need the **App Store Connect app record to
+exist**, with Finance as the primary category and US (and/or UK) availability
+set — but you do **not** need a shipped app, an approved review, an uploaded
+build, or screenshots.
+
+> Honest caveat: the request form is behind an Apple login, so I haven't seen
+> its fields. The ordering above is inferred from the constraints (you cannot
+> build without the entitlement) rather than stated outright by Apple. If the
+> form asks for something unexpected, that's worth recording here.
+
+## Order of operations
 
 ```
 1. Confirm membership type + tier          (5 min)   ← do this first
