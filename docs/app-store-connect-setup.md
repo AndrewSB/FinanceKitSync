@@ -4,9 +4,17 @@ Click-by-click for creating the app record and listing. Everything here needs
 your Apple account, so it's yours to do — but every value you'll be asked for is
 written out below, so it should be copy-and-paste rather than decision-making.
 
-> **Do step 0 in [`app-store.md`](./app-store.md) first.** If the account turns
-> out to be Individual-only, or the financial-management-tools criterion isn't
-> addressed, everything below is wasted effort.
+> ## ⛔ Do not start this yet — 2026-08-04
+>
+> The account (`A29347X2JZ`) is confirmed **Individual**, and Apple's FinanceKit
+> API documentation says the entitlement requires an **organization-level**
+> account. Until Apple Developer Support confirms the path (see
+> [`STATUS.md`](./STATUS.md)), creating the app record here may be wasted work:
+> if a new organization enrolment is required, that's a different Team ID and
+> this record would need transferring or recreating.
+>
+> Everything below stays accurate — just don't run it until the account question
+> is settled.
 
 ---
 
