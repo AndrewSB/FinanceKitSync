@@ -45,44 +45,95 @@ configuration needed. The scripts must stay executable — if that's ever lost,
 > **Tell me once the grant is done** and I can take over managing workflows,
 > triggers, and build settings through the App Store Connect API from there.
 
+## Connection status
+
+**Connected.** Xcode wrote
+`app/FinanceKitSync.xcodeproj/xcshareddata/xcodecloud/manifest.json`:
+
+| | |
+|---|---|
+| Product ID | `1eeb2fcc-69bc-4b1a-9296-7095ddc94e93` |
+| Target ID | `937ce9c4-6e56-43d2-aaf1-b3edaa9e8195` (`FinanceKitSync`) |
+
+That file is tracked in git — it's shared, not per-user.
+
+## ⚠️ Archiving is blocked until the entitlement lands
+
+Worth being clear before you build any of these: **any workflow with an Archive
+action will fail at signing** until Apple approves the FinanceKit entitlement.
+Not "produces a broken build" — the build errors out:
+
+```
+Provisioning profile "..." doesn't include the FinanceKit capability.
+Entitlement com.apple.developer.financekit requires approval from Apple.
+```
+
+So today, only workflow 1 (Build + Test, no signing) will go green. Workflows 2
+and 3 are worth creating now so they're ready, but expect them to fail until
+approval — or set `FKS_UNENTITLED = 1` on workflow 2 to get an installable (but
+data-blind) TestFlight build for UI testing.
+
+**For today's device test, don't wait on Xcode Cloud.** Build straight to the
+iPhone from Xcode with the unentitled variant — it's one step instead of a
+cloud round trip, and it's the same resulting app.
+
 ## Workflows
 
-### 1. `PR Check` — branch automation
+Create these in Xcode: **Product › Xcode Cloud › Manage Workflows › +**.
 
-| | |
+### 1. `PR Check` — the one that works today
+
+| Setting | Value |
 |---|---|
-| Start condition | **Pull Request Changes**, target branch `main` |
-| Environment | Xcode 27, macOS latest |
-| Actions | Build (`iOS`), Analyze |
-| Post-action | none |
-| Env vars | `FKS_UNENTITLED = 1` *(see below)* |
+| Start Condition | **Pull Request Changes** → target branch `main` |
+| Environment | Xcode 27.x, macOS latest, **Clean: off** |
+| Actions | **Build** (scheme `FinanceKitSync`, platform iOS) |
+| | **Test** (scheme `FinanceKitSync`, destination *iPhone 17 Pro*, iOS 27) |
+| Post-Actions | none |
+| Environment Variables | none |
 
-Catches compile breaks on every PR. No signing, no upload.
+No signing, no upload — so this is green regardless of the entitlement. This is
+your safety net on every PR.
 
-### 2. `Main` — branch automation
+> Don't add `FKS_UNENTITLED` here. Without an Archive action there's nothing to
+> sign, so it would do nothing but confuse.
 
-| | |
+### 2. `Main` — TestFlight on every merge
+
+| Setting | Value |
 |---|---|
-| Start condition | **Branch Changes**, `main`, files/paths `app/**` |
-| Environment | Xcode 27, macOS latest |
-| Actions | Archive (`iOS`) |
-| Post-action | **TestFlight (Internal Testing Only)** |
-| Env vars | `FKS_UNENTITLED = 1` *(remove after approval)* |
+| Start Condition | **Branch Changes** → `main` |
+| | **Files and Folders**: `app/**` *(so docs/server commits don't burn builds)* |
+| Environment | Xcode 27.x, macOS latest |
+| Actions | **Archive** (scheme `FinanceKitSync`, **Deployment Preparation: TestFlight (Internal Testing Only)**) |
+| Post-Actions | **TestFlight Internal Testing** → your internal group |
+| Environment Variables | `FKS_UNENTITLED` = `1` *(temporary — see above; delete after approval)* |
 
-The path filter matters: without it, every docs or server commit burns a build.
+### 3. `Release` — manual, ships to review
 
-### 3. `Release` — manual
-
-| | |
+| Setting | Value |
 |---|---|
-| Start condition | **Manual** |
-| Environment | Xcode 27, macOS latest |
-| Actions | Archive (`iOS`) |
-| Post-action | **TestFlight (External Testing Groups)** |
-| Env vars | *(none — must build with the real entitlement)* |
+| Start Condition | **Manual** |
+| Environment | Xcode 27.x, macOS latest |
+| Actions | **Archive** (scheme `FinanceKitSync`, **Deployment Preparation: App Store Connect**) |
+| Post-Actions | **TestFlight External Testing** → your external group |
+| Environment Variables | **none** — this must build with the real entitlement |
 
-Run from Xcode's Report navigator or App Store Connect when you actually intend
-to ship. This is the workflow that feeds App Store submission.
+Start it from Xcode's Report navigator or from App Store Connect. This is the
+workflow that produces the build you submit.
+
+## Scripting these instead
+
+Workflows can be created and edited through the App Store Connect API
+(`POST /v1/ciWorkflows`) rather than clicked. That needs an API key:
+**App Store Connect → Users and Access → Integrations → App Store Connect API**,
+role **Admin** (workflow management needs more than App Manager), then download
+the `.p8`.
+
+If you'd rather have these defined as code — reproducible, reviewable, and
+re-creatable — put the `.p8` somewhere gitignored, tell me the path, and I'll
+write a script that creates all three idempotently. Worth doing if you expect to
+tweak them; not worth it if you'll set them once and forget.
 
 ## The `FKS_UNENTITLED` escape hatch
 
