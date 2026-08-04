@@ -137,9 +137,20 @@ def sync_version(app_id: str) -> None:
     payload = {
         "description": CONFIG["description"],
         "keywords": CONFIG["keywords"],
-        "whatsNew": CONFIG["whatsNew"],
         "promotionalText": CONFIG["promotionalText"],
     }
+
+    # "What's New" only exists for updates. On a first release App Store Connect
+    # rejects the whole PATCH with:
+    #   409 STATE_ERROR — Attribute 'whatsNew' cannot be edited at this time
+    # so include it only once something has actually shipped.
+    released = asc.get(
+        f"/v1/apps/{app_id}/appStoreVersions?filter[appStoreState]=READY_FOR_SALE&limit=1"
+    )["data"]
+    if released:
+        payload["whatsNew"] = CONFIG["whatsNew"]
+    else:
+        log("whatsNew", "SKIPPED — not editable before a first release")
     for key in ("supportUrl", "marketingUrl"):
         if CONFIG.get(key):
             payload[key] = CONFIG[key]
