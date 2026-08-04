@@ -1,0 +1,9 @@
+{
+  "id" : "1eeb2fcc-69bc-4b1a-9296-7095ddc94e93",
+  "targets" : [
+    {
+      "id" : "937ce9c4-6e56-43d2-aaf1-b3edaa9e8195",
+      "name" : "FinanceKitSync"
+    }
+  ]
+}
