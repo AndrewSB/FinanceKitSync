@@ -77,6 +77,32 @@ A and B are otherwise independent and can progress; C depends on both.
 | Bundle ID | `com.asb.FinanceKitSync` |
 | Team | `A29347X2JZ` — **Individual account** (confirmed by Andrew, 2026-08-04) |
 
+### Evidence from a known approval: LunchSync
+
+<https://apps.apple.com/us/app/lunch-sync/id6739702427> — shipping, Finance
+category, FinanceKit entitlement approved.
+
+| | |
+|---|---|
+| Seller | **LittleBlueBug Software, LLC** → an **Organization** account |
+| Category | Finance |
+| Description | *"A way to sync transactions from your Apple Card or other Wallet accounts to your Lunch Money account. Select one or more wallet accounts to sync. Pair each one with an Asset from your Lunch Money account. Set it and forget it!"* |
+| Financial management features | **None.** No net worth, balances, trends, or budgeting — all of that lives in Lunch Money, a separate app. |
+
+This cuts both ways, and it reverses part of the earlier assessment in this file:
+
+- **The financial-management-tools criterion is applied loosely.** A pure
+  sync/export tool with no analysis features holds this entitlement today. The
+  earlier conclusion here — that FinanceKitSync's product shape likely
+  disqualifies it — was **too pessimistic**, and the recommendation to build an
+  Accounts + Trends surface *in order to qualify* is withdrawn. Those screens
+  are still worth building on product merit, but they are not the gate.
+- **The organization requirement looks more real, not less.** The single
+  approval we can observe belongs to an LLC. That's one data point, not proof,
+  but it points the same way as Apple's API documentation.
+
+Net: risk has shifted almost entirely onto the **account type**.
+
 ### Two independent rejection risks
 
 1. **Account type.** Apple's FinanceKit API documentation states you must *"hold

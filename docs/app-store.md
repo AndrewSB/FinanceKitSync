@@ -19,7 +19,28 @@ as currently specified does not meet all of them.** Verified against
 | Distributed through the **App Store for iPhone in the US or UK** | Planned | ✅ |
 | **"Provide financial management tools (for example, a comprehensive view of net worth, spending trends, budgeting)"** | SPEC §1 explicitly rules these out: *"No budgeting, categorization, charts, or analytics in the app."* | ❌ **conflict** |
 
-### The problem
+### Update 2026-08-04 — this criterion is applied loosely
+
+The analysis below was written before checking a known approval. **LunchSync**
+(<https://apps.apple.com/us/app/lunch-sync/id6739702427>) holds this entitlement,
+sits in the Finance category, and describes itself purely as *"a way to sync
+transactions from your Apple Card or other Wallet accounts to your Lunch Money
+account."* It provides no net worth view, no balances, no trends, and no
+budgeting — those live in Lunch Money, a separate app.
+
+So a pure sync/export tool demonstrably qualifies. The conclusion below that
+FinanceKitSync's shape disqualifies it was **too pessimistic**, and the
+recommendation to build financial-management features *in order to qualify* is
+withdrawn. Build them because they make the app better, not because Apple
+requires them.
+
+The observed risk has moved almost entirely to **account type** — LunchSync's
+seller is *LittleBlueBug Software, LLC*, an Organization account, while
+`A29347X2JZ` is Individual. See [`STATUS.md`](./STATUS.md).
+
+*Original analysis, retained for context:*
+
+### The problem (superseded — see above)
 
 FinanceKitSync is deliberately a pure data-export utility — it reads
 transactions and forwards them, and does nothing else. That is exactly what
