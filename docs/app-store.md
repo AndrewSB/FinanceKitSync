@@ -5,18 +5,71 @@ account actions — I don't have and shouldn't have access to your Apple account
 
 ---
 
-## Step 0 — Request the FinanceKit entitlement (do this first)
+## ⚠️ Step 0 — Eligibility. Read this before writing any more code.
 
-Nothing else can ship until this is approved. It is reviewed by a human at
-Apple, per Team ID and per bundle ID, and turnaround is days to weeks.
+Apple publishes explicit criteria for the FinanceKit entitlement, and **the app
+as currently specified does not meet all of them.** Verified against
+<https://developer.apple.com/financekit/> on 2026-08-04.
 
-**Where:** <https://developer.apple.com/contact/request/financekit/>
-(also reachable from Certificates, Identifiers & Profiles → the bundle ID →
-FinanceKit → "Request").
+| Apple's criterion | FinanceKitSync today | |
+|---|---|---|
+| Request submitted by the **Account Holder** of the developer account | Andrew is the Account Holder of `A29347X2JZ` | ✅ |
+| Held under an **organization-level** account (per Apple's guidance and developer-forum reports) | `A29347X2JZ` is registered as "Andrew Breckenridge" — very likely an **Individual** account | ❓ **verify** |
+| Listed in the **Finance category** in App Store Connect | Planned as Finance | ✅ |
+| Distributed through the **App Store for iPhone in the US or UK** | Planned | ✅ |
+| **"Provide financial management tools (for example, a comprehensive view of net worth, spending trends, budgeting)"** | SPEC §1 explicitly rules these out: *"No budgeting, categorization, charts, or analytics in the app."* | ❌ **conflict** |
+
+### The problem
+
+FinanceKitSync is deliberately a pure data-export utility — it reads
+transactions and forwards them, and does nothing else. That is exactly what
+Apple's last criterion excludes. An app whose entire pitch is "we don't analyze
+your data, we just move it" is a poor fit for a criterion that asks for net
+worth views, spending trends, and budgeting.
+
+This is a product-level risk, not a paperwork one. It cannot be fixed by
+wording the request more carefully.
+
+### Options
+
+1. **Add a genuine financial-management surface to the app** *(recommended)*.
+   The app already reads every account balance and the full transaction
+   history — the data for a net-worth total, per-account balances, and a
+   spending-trend view is *already in memory* during a sync and currently
+   thrown away. Building an in-app Accounts tab and a simple monthly
+   spending-by-category view is a modest addition that turns a ❌ into a ✅,
+   and makes the app more useful on its own terms. Syncing to your own server
+   then becomes a headline feature rather than the only feature.
+
+2. **Submit as-is and argue the case.** Faster, but the criterion is stated
+   plainly and the app visibly doesn't meet it. Expect rejection.
+
+3. **Ship without the App Store.** A personal/dev build works on a registered
+   device — but note that even a development build needs the entitlement, so
+   this only works if Apple grants it, which lands back at option 1.
+
+**Recommendation: option 1.** It is a few days of work, it addresses the only
+hard blocker, and it doesn't compromise the privacy story at all — the analysis
+happens on-device, on data the app already holds.
+
+### Also verify before filing
+
+**Is `A29347X2JZ` an Individual or Organization account?** Check at
+<https://developer.apple.com/account> → Membership. If it's Individual and
+Apple requires Organization, converting needs a **D-U-N-S number** and takes
+one to several weeks — which would become the new critical path, ahead of
+everything else. This is the single highest-value thing to check right now.
+
+## Step 0b — Submitting the request
+
+**Where:** <https://developer.apple.com/contact/request/financekit>
 
 **Team ID:** `A29347X2JZ`
 **Bundle ID:** `com.asb.FinanceKitSync` *(already registered — Xcode created it
 during a provisioning run on 2026-08-04)*
+
+Entitlements are granted **per bundle ID**, and can only be used with the
+single binary associated with that bundle ID.
 
 ### Draft request text
 
@@ -169,8 +222,12 @@ Attach this as a note:
 Paste into "Notes for Review". Reviewers cannot test this app without a server,
 so give them one.
 
-> This app requires a server that the user runs themselves; it has no hosted
-> backend by design. To review it end to end you'll need a test endpoint.
+> This app reads the user's Apple Card, Apple Cash, and Apple Pay transactions
+> and presents balances, net worth, and spending trends on device. It also lets
+> the user mirror that data to a personal server address they configure — there
+> is no hosted backend, and no data reaches us.
+>
+> To review the sync feature end to end you'll need a test endpoint.
 >
 > Test server URL: __________________________
 > Bearer token:    __________________________

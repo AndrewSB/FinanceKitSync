@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme LastUpgradeVersion = "2700" version = "1.7">
+   <BuildAction parallelizeBuildables = "YES" buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "FK00000000000000000012"
+               BuildableName = "FinanceKitSync.app"
+               BlueprintName = "FinanceKitSync"
+               ReferencedContainer = "container:FinanceKitSync.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry buildForTesting = "YES" buildForRunning = "NO" buildForProfiling = "NO" buildForArchiving = "NO" buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "FK00000000000000000024"
+               BuildableName = "FinanceKitSyncTests.xctest"
+               BlueprintName = "FinanceKitSyncTests"
+               ReferencedContainer = "container:FinanceKitSync.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction buildConfiguration = "Debug" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv = "NO">
+      <!--
+         The end-to-end suite reads FKS_TEST_URL and FKS_TEST_TOKEN, but the
+         test host runs inside the simulator and inherits neither your shell's
+         environment nor build settings. Pass them with the TEST_RUNNER_ prefix,
+         which xcodebuild forwards to the runner with the prefix stripped:
+
+           TEST_RUNNER_FKS_TEST_URL=https://host:8443 \
+           TEST_RUNNER_FKS_TEST_TOKEN=... \
+           xcodebuild test ...
+
+         Absent, the suite skips itself.
+      -->
+      <Testables>
+         <TestableReference skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "FK00000000000000000024"
+               BuildableName = "FinanceKitSyncTests.xctest"
+               BlueprintName = "FinanceKitSyncTests"
+               ReferencedContainer = "container:FinanceKitSync.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
+   </TestAction>
+   <LaunchAction buildConfiguration = "Debug" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle = "0" useCustomWorkingDirectory = "NO" ignoresPersistentStateOnLaunch = "NO" debugDocumentVersioning = "YES" debugServiceExtension = "internal" allowLocationSimulation = "YES">
+      <BuildableProductRunnable runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "FK00000000000000000012"
+            BuildableName = "FinanceKitSync.app"
+            BlueprintName = "FinanceKitSync"
+            ReferencedContainer = "container:FinanceKitSync.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </LaunchAction>
+   <ProfileAction buildConfiguration = "Release" shouldUseLaunchSchemeArgsEnv = "YES" savedToolIdentifier = "" useCustomWorkingDirectory = "NO" debugDocumentVersioning = "YES">
+      <BuildableProductRunnable runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "FK00000000000000000012"
+            BuildableName = "FinanceKitSync.app"
+            BlueprintName = "FinanceKitSync"
+            ReferencedContainer = "container:FinanceKitSync.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </ProfileAction>
+   <AnalyzeAction buildConfiguration = "Debug"></AnalyzeAction>
+   <ArchiveAction buildConfiguration = "Release" revealArchiveInOrganizer = "YES"></ArchiveAction>
+</Scheme>

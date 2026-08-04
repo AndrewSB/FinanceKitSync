@@ -88,22 +88,34 @@ struct SyncEngine {
             ))
         }
 
+        // The simulator has no FinanceKit store, and — measured, not assumed —
+        // `isDataAvailable(.financialData)` still returns TRUE there. The first
+        // real query then traps inside FinanceKit rather than throwing:
+        //
+        //   FinanceKit/FinanceDataStore.swift:53: Fatal error: Could not create
+        //   CoreDataStore: ... "request failed, insufficient permission"
+        //
+        // A trap can't be caught, so the availability guard below is not enough
+        // on its own. Bail out before touching FinanceKit at all.
+        if isSimulator {
+            log("FinanceKit is unavailable in the simulator; skipping the sync")
+            return .skipped("FinanceKit is not available in the simulator")
+        }
+
         do {
-            // FinanceKit traps rather than throws when its store can't be
-            // opened, so bail out before querying.
-            if !isSimulator {
-                guard FinanceStore.isDataAvailable(.financialData) else {
-                    throw NSError(domain: "SyncEngine", code: -3, userInfo: [
-                        NSLocalizedDescriptionKey: "Financial data isn't available on this device."
-                    ])
-                }
-                let status = try await FinanceStore.shared.requestAuthorization()
-                guard status == .authorized else {
-                    throw NSError(domain: "SyncEngine", code: -4, userInfo: [
-                        NSLocalizedDescriptionKey:
-                            "Access to financial data isn't authorized. Grant it in Settings › Privacy & Security › Financial Data."
-                    ])
-                }
+            // Same hazard on device: FinanceKit traps rather than throws when
+            // its store can't be opened, so check before querying.
+            guard FinanceStore.isDataAvailable(.financialData) else {
+                throw NSError(domain: "SyncEngine", code: -3, userInfo: [
+                    NSLocalizedDescriptionKey: "Financial data isn't available on this device."
+                ])
+            }
+            let status = try await FinanceStore.shared.requestAuthorization()
+            guard status == .authorized else {
+                throw NSError(domain: "SyncEngine", code: -4, userInfo: [
+                    NSLocalizedDescriptionKey:
+                        "Access to financial data isn't authorized. Grant it in Settings › Privacy & Security › Financial Data."
+                ])
             }
 
             // All accounts with current balances. Accounts ride along on every
@@ -336,11 +348,22 @@ struct SyncEngine {
             metadata: metadata
         )
 
-        // SHA-256 over a canonical string of the change-relevant fields —
-        // deliberately not Hasher/hashValue, whose seed is randomized per
-        // process (which would re-send the entire history on every launch).
-        // Any correction that alters what the packet carries changes the hash
-        // and re-queues the row. nil encodes distinctly from empty string.
+        return (packet, contentHash(wallet: wallet, status: status))
+    }
+
+    /// The stable content hash used for change detection.
+    ///
+    /// Split out from `packetEntry` so it can be tested: `FinanceKit.Transaction`
+    /// can't be constructed outside FinanceKit, but `WalletPayload` is a plain
+    /// struct, and this function is where all the subtle behaviour lives.
+    ///
+    /// SHA-256 over a canonical string of the change-relevant fields —
+    /// deliberately not `Hasher`/`hashValue`, whose seed is randomized per
+    /// process (which would re-send the entire history on every launch). Any
+    /// correction that alters what the packet carries changes the hash and
+    /// re-queues the row. `nil` encodes distinctly from the empty string, so a
+    /// merchant name being cleared is not confused with it being absent.
+    static func contentHash(wallet: WalletMetadata.WalletPayload, status: String) -> String {
         let nilMarker = "\u{1}nil"
         let canonical = [
             wallet.accountId,
@@ -359,10 +382,8 @@ struct SyncEngine {
             wallet.foreignAmount?.currency ?? nilMarker,
             wallet.foreignExchangeRate ?? nilMarker
         ].joined(separator: "|")
-        let hash = SHA256.hash(data: Data(canonical.utf8))
+        return SHA256.hash(data: Data(canonical.utf8))
             .map { String(format: "%02x", $0) }
             .joined()
-
-        return (packet, hash)
     }
 }
