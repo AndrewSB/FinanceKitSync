@@ -54,7 +54,7 @@ Debug configuration and hit Run.
 
 ## Test script
 
-Server URL: `https://box.tail590aa.ts.net:8443`
+Server URL: `https://$FKS_HOST:8443`
 Token: `ssh box "grep '^FKS_TOKEN=' /opt/financekitsync/.env | cut -d= -f2-"`
 
 1. **Fresh install** → onboarding step 1 renders, Continue advances.

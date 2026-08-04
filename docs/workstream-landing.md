@@ -31,14 +31,6 @@ branch-based deploy needs no scope beyond `repo` and no extra moving parts.
 > `AndrewSB/andrewsb.github.io`, so the personal site is back on
 > `andrewsb.github.io` and project pages resolve normally.
 
-## URL
-
-`https://andrewsb.github.io/FinanceKitSync/`
-
-This goes in App Store Connect as both the marketing and support URL. If a
-custom domain is added later, put it in `landing/CNAME` and re-run the publish
-script.
-
 ## Live URLs
 
 | Page | URL | |
@@ -50,6 +42,9 @@ script.
 The privacy and support URLs are set on the App Store listing. Markdown mirrors
 (`PRIVACY.md`, `SUPPORT.md`) stay in the repo root — they render on github.com
 and are a working fallback if Pages ever breaks again.
+
+If a custom domain is added later, put it in `landing/CNAME` and re-run
+`landing/publish.sh`.
 
 ## Checklist
 

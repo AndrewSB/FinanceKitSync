@@ -2,7 +2,9 @@
 #
 # End-to-end protocol checks against a running server.
 #
-#   ./test_protocol.sh https://box.tail590aa.ts.net:8443 "$TOKEN"
+#   ./test_protocol.sh "https://$FKS_HOST:8443" "$TOKEN"
+#
+# $FKS_HOST is your own tailnet name — see docs/workstream-server.md#host-names.
 #
 set -uo pipefail
 

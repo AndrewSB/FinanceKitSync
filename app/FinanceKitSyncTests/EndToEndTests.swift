@@ -6,7 +6,7 @@
 //  FKS_TEST_URL and FKS_TEST_TOKEN are set, so no credentials live in the repo
 //  and CI doesn't depend on a reachable host.
 //
-//      FKS_TEST_URL=https://box.tail590aa.ts.net:8443 \
+//      FKS_TEST_URL=https://box.example.ts.net:8443 \
 //      FKS_TEST_TOKEN=... \
 //      xcodebuild test -scheme FinanceKitSync -destination '...'
 //

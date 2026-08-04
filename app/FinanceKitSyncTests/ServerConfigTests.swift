@@ -13,8 +13,8 @@ import Foundation
 struct ServerConfigTests {
 
     @Test("accepts https URLs", arguments: [
-        "https://box.tail590aa.ts.net",
-        "https://box.tail590aa.ts.net:8443",
+        "https://box.example.ts.net",
+        "https://box.example.ts.net:8443",
         "https://example.com/sync",
         "https://192.0.2.10:8501",
         "HTTPS://EXAMPLE.COM",          // scheme comparison is case-insensitive
@@ -57,6 +57,6 @@ struct ServerConfigTests {
     func preservesPort() {
         // Tailscale Funnel hands out non-443 ports, so dropping this would
         // break the documented setup.
-        #expect(ServerConfig.validate("https://box.tail590aa.ts.net:8443")?.port == 8443)
+        #expect(ServerConfig.validate("https://box.example.ts.net:8443")?.port == 8443)
     }
 }
