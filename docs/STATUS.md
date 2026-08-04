@@ -67,7 +67,27 @@ A and B are otherwise independent and can progress; C depends on both.
 | Funnel port 8443 reclaimed by another service | Low | `box` already runs Funnel on 10000 and 3000; document the port in workstream-server.md |
 | v0 `server/main.py` source lost | Resolved | Contract recovered from `.pyc`; v1 is a rewrite anyway |
 
-## 🔴 Blocking question: does this app qualify for the entitlement at all?
+## Entitlement request — filed
+
+| | |
+|---|---|
+| Request ID | **`453VPT726K`** |
+| Filed | 2026-08-04 |
+| Version sent | **B** — the app as it stands, without financial management features |
+| Bundle ID | `com.asb.FinanceKitSync` |
+| Team | `A29347X2JZ` |
+
+Version B was submitted knowingly, with the qualification risk below understood.
+If Apple comes back citing the financial-management-tools criterion, the fix is
+already scoped — see [`app-store.md`](./app-store.md) §0 — and Version A of the
+explanation text in [`entitlement-request-text.md`](./entitlement-request-text.md)
+is ready for a resubmit.
+
+**Hedge while waiting:** build the Accounts + Trends surface anyway. It's needed
+for App Review regardless of how this request lands, and having it done turns a
+rejection into a same-day resubmit instead of a restart.
+
+## 🔴 Open risk: does this app qualify for the entitlement at all?
 
 Apple's published FinanceKit criteria require the app to **"provide financial
 management tools (for example, a comprehensive view of net worth, spending
