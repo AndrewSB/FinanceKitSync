@@ -5,14 +5,15 @@
 Credentials come from the environment and are never stored in the repo:
 
 ```bash
-export ASC_KEY_ID=K7ADUCTS7A
-export ASC_ISSUER_ID=69a6de8c-48a9-47e3-e053-5b8c7c11a4d1
-export ASC_KEY_PATH=~/Downloads/AuthKey_K7ADUCTS7A.p8   # move somewhere permanent
+export ASC_KEY_ID=XXXXXXXXXX
+export ASC_ISSUER_ID=00000000-0000-0000-0000-000000000000
+export ASC_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_XXXXXXXXXX.p8
 ```
 
-> Move the `.p8` out of `~/Downloads` — Apple lets you download it exactly once,
-> and losing it means revoking the key and issuing a new one. `*.p8` is
-> gitignored, so it can't be committed by accident.
+> Apple lets you download the `.p8` exactly once — losing it means revoking the
+> key and issuing a new one. `*.p8` is gitignored so it can't be committed by
+> accident, and the key/issuer IDs are deliberately not recorded here since this
+> repository is public.
 
 | File | |
 |---|---|

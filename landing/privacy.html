@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — FinanceKit Sync</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1c1c1e;
+    --muted: #5f6368;
+    --rule: #e2e2e6;
+    --accent: #0b57d0;
+    --panel: #f5f5f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131316;
+      --fg: #e8e8ea;
+      --muted: #a1a1a8;
+      --rule: #303036;
+      --accent: #7fa9f5;
+      --panel: #1d1d21;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    padding: 2.5rem 1.25rem 5rem;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  main {
+    max-width: 42rem;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 1.9rem;
+    line-height: 1.25;
+    margin: 0 0 1rem;
+    letter-spacing: -0.02em;
+  }
+  h2 {
+    font-size: 1.25rem;
+    line-height: 1.35;
+    margin: 2.75rem 0 0.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    letter-spacing: -0.01em;
+  }
+  p, ul, ol { margin: 0 0 1rem; }
+  ul, ol { padding-left: 1.35rem; }
+  li { margin-bottom: 0.4rem; }
+  li > ul { margin-top: 0.4rem; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  .meta {
+    color: var(--muted);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+  .meta div { margin-bottom: 0.15rem; }
+  .lead {
+    font-size: 1.1875rem;
+    line-height: 1.6;
+  }
+  .callout {
+    background: var(--panel);
+    border-radius: 10px;
+    padding: 1rem 1.15rem;
+    margin: 0 0 1rem;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+  @media (max-width: 480px) {
+    body { padding: 1.75rem 1rem 3.5rem; font-size: 1rem; }
+    h1 { font-size: 1.625rem; }
+    h2 { font-size: 1.15rem; margin-top: 2.25rem; }
+    .lead { font-size: 1.0625rem; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <h1>Privacy Policy for FinanceKit Sync</h1>
+
+  <div class="meta">
+    <div><strong>Effective date:</strong> August 4, 2026</div>
+    <div><strong>Last updated:</strong> August 4, 2026</div>
+    <div>App: <strong>FinanceKit Sync</strong> (bundle ID <code>com.asb.FinanceKitSync</code>)</div>
+    <div>Developer: <strong>Andrew Breckenridge</strong>, an individual developer based in the United States</div>
+    <div>Contact: <a href="mailto:asbreckenridge@me.com">asbreckenridge@me.com</a></div>
+  </div>
+
+  <h2>Overview</h2>
+  <p class="lead">FinanceKit Sync reads your Apple Card, Apple Cash, and Apple Pay transaction history from your iPhone and sends it to a server that you choose and operate.</p>
+  <p>There is no service behind this app. The developer does not run a server, does not host an account system, and does not receive your data. You enter the address of your own server, and the app sends your transactions there and nowhere else.</p>
+  <p>There is no account, no login, and no hosted backend.</p>
+
+  <h2>What data the app accesses</h2>
+  <p>With your permission, the app uses Apple's FinanceKit framework to read transaction history for:</p>
+  <ul>
+    <li>Apple Card</li>
+    <li>Apple Cash</li>
+    <li>Apple Pay</li>
+  </ul>
+  <p>This includes the transaction details FinanceKit provides, such as amounts, merchant descriptions, dates, and transaction identifiers.</p>
+  <p>iOS will not give the app any of this data until you explicitly grant FinanceKit permission. You can revoke that permission at any time in <strong>Settings &rarr; Privacy &amp; Security</strong> on your device. If you revoke it, the app can no longer read your transactions.</p>
+  <p>The app does not access your contacts, photos, location, microphone, camera, health data, or any other category of personal data.</p>
+
+  <h2>What is transmitted, and where</h2>
+  <p>Transaction data is sent <strong>only</strong> to the server URL you enter in the app. You choose that destination. You control it. The app has no other destination built in, and no default or fallback server.</p>
+  <ul>
+    <li>Transmission is <strong>HTTPS only</strong>. The app refuses to accept or use a URL that is not HTTPS.</li>
+    <li>Each request is authenticated with a bearer token that <strong>you</strong> supply and that your server checks.</li>
+    <li>Nothing is sent to the developer, and nothing is routed through any intermediary service.</li>
+  </ul>
+  <p>If you never configure a server URL, the app has nowhere to send data and sends nothing.</p>
+
+  <h2>What is stored on your device</h2>
+  <p>The app stores the following locally on your iPhone, and nowhere else:</p>
+  <ol>
+    <li><strong>The bearer token</strong> you supply, stored in the iOS Keychain.</li>
+    <li><strong>The server URL</strong> you enter, stored in the app's preferences.</li>
+    <li><strong>Sync status</strong> — whether background sync is enabled, when the last sync ran, and the last error message, if any.</li>
+    <li><strong>A local ledger</strong> of what has already been delivered. For each already-delivered transaction, the ledger holds only:
+      <ul>
+        <li>an identifier,</li>
+        <li>a SHA-256 checksum, and</li>
+        <li>a timestamp.</li>
+      </ul>
+      The ledger exists so the app knows what it has already sent and does not send it twice.
+    </li>
+    <li><strong>An activity log</strong> for troubleshooting — a bounded, rolling record of sync events: timestamps, counts of accounts and transactions processed, and any error messages. Where an error concerns a specific account, the log may include that account's display name (for example, &ldquo;Apple Card&rdquo;). You can view, export, and clear this log in the app under <strong>Activity log</strong>.</li>
+  </ol>
+  <div class="callout">
+    <p><strong>The app does not persist transaction amounts, merchant names, or transaction dates.</strong> Those values are read, transmitted to your server, and not written to the app's own storage.</p>
+    <p>All of the above stays on your device. None of it is transmitted anywhere, including to the developer.</p>
+  </div>
+
+  <h2>What the developer collects</h2>
+  <div class="callout">
+    <p><strong>Nothing.</strong></p>
+  </div>
+  <p>The developer receives no user data whatsoever and has no technical means of accessing it. There is no developer-operated server, database, log, or endpoint that your data could reach. Your transaction data goes from your iPhone to your server, and the developer is not part of that path.</p>
+
+  <h2>Third parties</h2>
+  <p>The app contains:</p>
+  <ul>
+    <li><strong>No analytics.</strong></li>
+    <li><strong>No advertising.</strong></li>
+    <li><strong>No tracking or tracking identifiers.</strong></li>
+    <li><strong>No crash reporting.</strong></li>
+    <li><strong>No third-party SDKs of any kind.</strong></li>
+  </ul>
+  <p>No data is sold, shared, rented, or disclosed to anyone. There is nothing to sell &mdash; the developer never has your data.</p>
+  <p>The only network connection the app makes is to the server URL you configure.</p>
+
+  <h2>Your choices and control</h2>
+  <ul>
+    <li><strong>Grant or revoke access.</strong> FinanceKit access is entirely under your control in iOS Settings &rarr; Privacy &amp; Security. Revoking it stops the app from reading transactions.</li>
+    <li><strong>Choose the destination.</strong> You decide what server receives your data, and you can change or clear the server URL at any time.</li>
+    <li><strong>Control the credentials.</strong> The bearer token is yours. You can change it, and you can invalidate it on your server.</li>
+    <li><strong>Stop entirely.</strong> Delete the app and it stops reading and sending anything.</li>
+  </ul>
+
+  <h2>Data retention and deletion</h2>
+  <ul>
+    <li><strong>On your device:</strong> deleting FinanceKit Sync removes all data the app stored locally, including the server URL, sync status, the local ledger, the activity log, and the bearer token held in the Keychain.</li>
+    <li><strong>On your server:</strong> any data already sent to your server is under your control. Retention and deletion there are governed by how you have configured your own system. The developer cannot access, retrieve, or delete it.</li>
+    <li><strong>With the developer:</strong> there is nothing to delete, because the developer holds nothing.</li>
+  </ul>
+
+  <h2>Security</h2>
+  <ul>
+    <li>Transactions are transmitted over HTTPS. The app rejects non-HTTPS URLs.</li>
+    <li>Requests are authenticated with a bearer token you supply.</li>
+    <li>The bearer token is stored in the iOS Keychain, which is protected by the device's hardware-backed encryption and passcode.</li>
+    <li>Transaction data is read from FinanceKit and sent; amounts, merchant names, and dates are not written to persistent app storage.</li>
+  </ul>
+  <div class="callout">
+    <p><strong>Because you operate the destination server, securing it is your responsibility.</strong> That includes keeping its TLS configuration current, protecting the bearer token, restricting who can reach the server, and securing whatever storage or backups your server keeps. The developer has no control over and no visibility into your server.</p>
+  </div>
+
+  <h2>Children's privacy</h2>
+  <p>FinanceKit Sync is not directed to children under 13, and the developer does not knowingly collect any information from children. The app depends on Apple Card, Apple Cash, and Apple Pay accounts, which are not available to children under 13.</p>
+
+  <h2>GDPR and CCPA note</h2>
+  <p>Because the developer never receives your transaction data, the developer is <strong>not a data controller or a data processor</strong> for that data. You determine what is collected, where it goes, and how long it is kept &mdash; those decisions are yours, made on infrastructure you operate.</p>
+  <p>If you are in the European Economic Area, the United Kingdom, or California, you still hold your rights under applicable law, including rights of access, correction, deletion, and portability. Those rights are exercised against whoever actually holds your data. In this case, that is you and your own server.</p>
+  <p>The developer does not sell or share personal information, and there is no personal information held by the developer to access, correct, delete, or port. If you have a question or want to raise a privacy request anyway, you are welcome to contact the developer at the address below.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If this policy changes, the updated version will be posted with a new "Last updated" date. Material changes will be reflected in the app's App Store listing. Because the developer holds no user data and has no account system, there is no way to notify you directly, so please check this page if you want to stay current.</p>
+
+  <h2>Contact</h2>
+  <p>Andrew Breckenridge<br>
+  Email: <a href="mailto:asbreckenridge@me.com">asbreckenridge@me.com</a></p>
+
+  <footer>
+    FinanceKit Sync &mdash; Privacy Policy. Last updated August 4, 2026.
+  </footer>
+
+</main>
+</body>
+</html>
