@@ -12,7 +12,7 @@ table whenever something moves.
 | A | [iOS app](./workstream-app.md) | Claude | 🟢 builds; untested on device | FinanceKit entitlement (device install) |
 | B | [Server on `box`](./workstream-server.md) | Claude | 🟢 deployed, 13/13 protocol tests pass | Andrew: decide public exposure |
 | C | [Landing page](./workstream-landing.md) | Claude | 🟡 written & pushed to `gh-pages` | Andrew: repo must be public to serve it |
-| D | [Xcode Cloud](./xcode-cloud.md) / [App Store](./app-store.md) | Andrew | 🔴 **critical path** | Andrew: file the FinanceKit request |
+| D | [Xcode Cloud](./xcode-cloud.md) / [App Store](./app-store.md) / [ASC setup](./app-store-connect-setup.md) | Andrew | 🔴 **critical path** | Eligibility — see the blocking question below |
 
 Workstreams A and B are independent and run in parallel. C depends on both. D's
 long pole (the entitlement) is independent of everything and should start now.

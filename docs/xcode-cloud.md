@@ -5,18 +5,45 @@ is no file format for them and no API to create them, so the definitions below
 have to be entered once through the UI. Everything that *can* live in the repo
 does: the build scripts in [`../ci_scripts/`](../ci_scripts/).
 
+## What I can and can't do
+
+Xcode Cloud's first-run setup is **interactive OAuth** — granting Apple access
+to your GitHub account installs the Xcode Cloud GitHub App, and there is no CLI
+or API for that step. Everything downstream (workflows, build scripts) is
+scriptable via the App Store Connect API, but the grant is not.
+
+So the split is:
+
+| | |
+|---|---|
+| **Done, in the repo** | `ci_scripts/ci_post_clone.sh`, `ci_scripts/ci_pre_xcodebuild.sh`, the shared scheme (Xcode Cloud requires a *shared* scheme — it can't see per-user ones), the workflow definitions below |
+| **Needs you, ~10 minutes** | The GitHub grant, then clicking through the three workflows |
+
+## Prerequisites
+
+- **Paid Apple Developer Program membership.** Xcode Cloud is included, but the
+  account must be active. See the eligibility warning in
+  [`app-store.md`](./app-store.md) §0 — this may need resolving first.
+- **The repo must be reachable by Apple.** It is currently **private**;
+  Xcode Cloud can build private repos, but the grant has to cover it.
+
 ## One-time setup
 
-1. Xcode → **Product › Xcode Cloud › Create Workflow**
-2. Pick the `FinanceKitSync` app target.
-3. Grant Xcode Cloud access to `AndrewSB/FinanceKitSync` when prompted (it
-   installs the Xcode Cloud GitHub App — this is what makes branch triggers
-   work).
-4. Create the three workflows below.
+1. Open `app/FinanceKitSync.xcodeproj` in Xcode.
+2. **Product › Xcode Cloud › Create Workflow.**
+3. Select the `FinanceKitSync` app target. Xcode detects the shared scheme.
+4. When prompted, **grant access to `AndrewSB/FinanceKitSync`**. This installs
+   the Xcode Cloud GitHub App and is what makes branch and PR triggers work.
+   *(This is the step I can't do for you.)*
+5. Xcode offers a default "Build" workflow — accept it, then edit it and add the
+   other two per the table below.
 
-Xcode Cloud finds `ci_scripts/` at the repository root automatically. No
-configuration needed, but the scripts must stay executable (`git update-index
---chmod=+x` if that ever gets lost).
+Xcode Cloud finds `ci_scripts/` at the repository root automatically; no
+configuration needed. The scripts must stay executable — if that's ever lost,
+`git update-index --chmod=+x ci_scripts/*.sh`.
+
+> **Tell me once the grant is done** and I can take over managing workflows,
+> triggers, and build settings through the App Store Connect API from there.
 
 ## Workflows
 
