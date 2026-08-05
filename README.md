@@ -26,9 +26,14 @@ docs/      spec, workstream tracking, App Store material
 
 ## Status
 
-Pre-release. The app builds and the server is deployed and tested, but
-distribution is blocked on Apple approving the `com.apple.developer.financekit`
-entitlement — see [docs/app-store.md](docs/app-store.md).
+⏸️ **Parked, waiting on Apple.** The app builds and passes 44 tests, the server
+is deployed and verified, and the App Store listing is complete — but the
+`com.apple.developer.financekit` entitlement (request `453VPT726K`) is pending,
+and without it the app **cannot be signed for a device at all**. So no build
+exists, and no real transaction has ever been read.
+
+**[docs/STATUS.md](docs/STATUS.md) is the single source of truth**, and starts
+with a step-by-step *"Resume here when the entitlement is approved"* runbook.
 
 ## License
 
