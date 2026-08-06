@@ -3,8 +3,8 @@
 Single source of truth for where the project stands.
 
 **Last updated:** 2026-08-06
-**State:** 🟢 **Unparked.** Entitlement provisioned, build on TestFlight,
-screenshots live. Two things stand between here and Submit.
+**State:** 🟢 **Submitted.** Version 1.0 (build 19) is `WAITING_FOR_REVIEW` as
+of 2026-08-06 15:14 UTC. The device test is still unrun.
 
 ---
 
@@ -33,39 +33,54 @@ Verified end to end on 2026-08-06 — the signed binary carries:
 
 | | |
 |---|---|
-| App record | `6797988167`, version 1.0, `PREPARE_FOR_SUBMISSION` |
+| App record | `6797988167`, version 1.0, `WAITING_FOR_REVIEW` |
 | Listing metadata | ✅ complete |
 | Privacy / support / marketing URLs | ✅ set and serving |
-| Builds uploaded | ⚠️ **1.0 (1)** — `VALID` and attached, but **built with Xcode 27 beta, so not submittable**. Superseded by the Xcode Cloud `Release` build |
+| Build in review | ✅ **19**, from Xcode Cloud `Release` on Xcode 26.6 GM. (Build 1, from the local Xcode 27 beta, is superseded and not submittable) |
 | Screenshot sets | ✅ **2** (6.9" and 6.5"), 5 images each, all `COMPLETE` |
-| Privacy nutrition labels | 🔴 **not started — web UI only, no API** |
-| Throwaway review server | 🔴 **not stood up** |
+| Privacy nutrition labels | ✅ done by Andrew in the web UI (no API exists) |
+| Throwaway review server | ➖ **not provided, by decision** — see below |
 | Device verification | 🔴 **still unproven** |
-| Submission record | none |
+| Submission record | ✅ `de454c50-…`, `WAITING_FOR_REVIEW` |
 
-## 🔴 The two blockers to Submit
+## Submitted 2026-08-06
 
-### 1. Privacy nutrition labels
+Review submission `de454c50-0392-4785-936e-ad3163928536`, `WAITING_FOR_REVIEW`.
 
-There is no API for this — checked directly, `/v1/appDataUsages`,
-`/v1/appDataUsageCategories` and `appDataUsagesPublishState` all 404, and `apps`
-exposes no privacy relationship. Unlike the listing metadata, it cannot be
-scripted.
+Submitted deliberately ahead of the device test, on Andrew's call: queue
+position is worth more than certainty, and a rejection can be answered with a
+new build. What that trades away is real — see the two risks below.
 
-**App Store Connect → FinanceKit Sync → App Privacy → Get Started →** answer
-**"No"** to *Do you or your third-party partners collect data from this app?* →
-**Publish**. Reasoning for that answer is in [`app-store.md`](./app-store.md) §3.
+Three things were set during submission that had never been set before, and each
+is an assertion in Andrew's name worth knowing about:
 
-### 2. The throwaway review server
+- **Price: Free**, base territory USA, all territories.
+- **Age rating: every question answered "no."** No violence, gambling, contests,
+  weapons, medical or health topics, messaging, user-generated content,
+  unrestricted web access, social media, advertising, or loot boxes. Accurate
+  for an app with no content of any kind.
+- **Review contact:** set in App Store Connect. Not recorded here — this repo is
+  public, and the phone number on that form isn't.
 
-App Review cannot test this app without a server, and they must not be given
-`box`'s token. Standing one up is **not** the one-liner this file used to claim
-— `deploy.sh` hardcodes the local port, container name, and image tag, so a
-second instance collides with the live one. Scope and the Funnel warning are in
-[`app-store.md`](./app-store.md) §4.
+### ⚠️ Risk: App Review cannot exercise the sync
 
-Until it exists, "Notes for Review" has nowhere to point, so that field is
-deliberately left unset rather than filled with blanks.
+By decision, no test server is provided — that is the product (users bring their
+own), and the notes say so plainly. But it means a reviewer cannot see the app's
+one feature work.
+
+Compounding it: `ServerConfig.validate` **requires https**, so a reviewer who
+clones the open-source server and runs it locally on `http://127.0.0.1:8501`
+cannot even enter that address. There is no path to a successful sync on a
+reviewer's device without them standing up TLS.
+
+The notes therefore describe what *can* be verified without a server — onboarding,
+the connection test failing correctly, the permission prompt and its denial path,
+and that zero transactions on a device with no Apple Card history is correct
+behaviour rather than an error.
+
+**If this comes back as a 2.1 rejection, that is why**, and the fix is a reachable
+https endpoint with synthetic data (scoped in [`app-store.md`](./app-store.md) §4),
+not a code change.
 
 ## 🔴 Still the genuinely unproven half: the device
 
@@ -119,7 +134,7 @@ enabled on `:8443` — read the warning in `server/deploy.sh` first.
 | B | [Server on `box`](./workstream-server.md) | Claude | 🟢 deployed, 13/13 protocol checks | — (exposure decision open) |
 | C | [Landing / privacy / support](./workstream-landing.md) | Claude | 🟢 live on GitHub Pages | — (copy says old name) |
 | D | [Xcode Cloud](./xcode-cloud.md) | Claude | 🟢 connected since 2026-08-04; `Default` + `Release` workflows, both pinned to Xcode 26.6 GM | — |
-| E | [App Store](./app-store.md) / [listing](./listing.md) | Andrew | 🟡 metadata, build, and screenshots done | 🔴 Privacy labels + review server |
+| E | [App Store](./app-store.md) / [listing](./listing.md) | Andrew | 🟢 submitted 2026-08-06, `WAITING_FOR_REVIEW` | Apple |
 
 ## Decisions made
 
@@ -412,3 +427,24 @@ Everything else is either done or gated on Apple. See
   Apple approved the entitlement on `A29347X2JZ`, an Individual account. The
   organization requirement in the FinanceKit API docs is not enforced at request
   time. No conversion needed.
+- **2026-08-06** — **Submitted for review.** Version 1.0, build 19, from Xcode
+  Cloud on Xcode 26.6 GM. Submission `de454c50-…`, `WAITING_FOR_REVIEW` at
+  15:14 UTC. Five things had never been set and blocked it, none of them
+  mentioned anywhere in this repo's checklists: **app pricing** (nothing had
+  ever been set — the submission is rejected outright without it, now Free), the
+  **age rating declaration** (every attribute required, all answered "no"), the
+  **review contact**, the **review notes**, and attaching the build. Two API
+  notes for next time: `ageRatingDeclarations` hangs off `appInfos`, not
+  `appStoreVersions`, and is `UPDATE`-only — a `GET` returns 403 and the
+  submission error reports its ID as the *version* ID, which is wrong and sends
+  you to a 404. Inline creation in `appPriceSchedules` needs the literal
+  `${local-id}` format.
+- **2026-08-06** — Submitted **before** the device test, on Andrew's call, with
+  no review server. Both risks are recorded above rather than smoothed over. The
+  app has still never read a real transaction.
+- **2026-08-06** — v1.1 subscription planned: 3-day free trial, then $2.99/month.
+  See [`subscription.md`](./subscription.md). Two decisions gate the work, and
+  one of them expires: **grandfathering v1.0 users cannot be added
+  retroactively**, because the signal it depends on
+  (`AppTransaction.originalAppVersion`) has to be read on the first launch of
+  the paywalled build.
