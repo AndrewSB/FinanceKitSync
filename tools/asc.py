@@ -101,6 +101,34 @@ def post(path: str, body: dict) -> dict:
     return request("POST", path, body)
 
 
+def delete(path: str) -> dict:
+    return request("DELETE", path)
+
+
+def upload(operation: dict, chunk: bytes) -> None:
+    """Perform one of the `uploadOperations` Apple hands back when you reserve
+    an asset (a screenshot, an app preview).
+
+    Deliberately not routed through `request`: these go to Apple's asset
+    storage, not the API, and must be sent *without* the bearer token — with
+    only the headers named in the operation, and a raw body rather than JSON.
+    """
+    req = urllib.request.Request(
+        operation["url"], data=chunk, method=operation["method"]
+    )
+    for header in operation.get("requestHeaders", []):
+        req.add_header(header["name"], header["value"])
+
+    try:
+        with urllib.request.urlopen(req) as response:
+            response.read()
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode(errors="replace")
+        raise SystemExit(
+            f"HTTP {exc.code} {operation['method']} {operation['url']}\n{detail}"
+        ) from None
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         raise SystemExit(__doc__)

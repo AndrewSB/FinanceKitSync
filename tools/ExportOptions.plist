@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Export options for the App Store build.
+
+  Used by:
+
+    xcodebuild -exportArchive \
+      -archivePath build/FinanceKitSync.xcarchive \
+      -exportPath build/export \
+      -exportOptionsPlist tools/ExportOptions.plist \
+      -allowProvisioningUpdates \
+      -authenticationKeyPath ... -authenticationKeyID ... -authenticationKeyIssuerID ...
+
+  The archive itself is signed for development — that is what a plain `archive`
+  produces, and App Store Connect rejects it (`get-task-allow` is present). This
+  step re-signs it with an Apple Distribution certificate and an App Store
+  profile, which is what makes the result uploadable.
+
+  The API-key flags above are what let automatic signing create that certificate
+  and profile without an interactive Xcode account.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+
+	<key>teamID</key>
+	<string>A29347X2JZ</string>
+
+	<key>signingStyle</key>
+	<string>automatic</string>
+
+	<!-- Uploading is a separate, explicit step. Never make the export itself
+	     push a build to App Store Connect. -->
+	<key>destination</key>
+	<string>export</string>
+
+	<!-- Symbols go up so TestFlight and Xcode Organizer can symbolicate
+	     crashes. This app has no third-party SDKs, so there is nothing here
+	     that isn't ours. -->
+	<key>uploadSymbols</key>
+	<true/>
+
+	<!-- Bitcode is long dead; being explicit avoids a warning. -->
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+</dict>
+</plist>

@@ -10,9 +10,16 @@ import FinanceKit
 struct OnboardingView: View {
     let onComplete: () -> Void
 
+#if DEBUG
+    @State private var step = ScreenshotMode.onboardingStep
+    @State private var urlText = ScreenshotMode.isActive
+        ? ScreenshotMode.sampleURL : ServerConfig.baseURLString
+    @State private var tokenText = ScreenshotMode.isActive ? "placeholder-token" : ""
+#else
     @State private var step = 0
     @State private var urlText = ServerConfig.baseURLString
     @State private var tokenText = ""
+#endif
 
     var body: some View {
         NavigationStack {

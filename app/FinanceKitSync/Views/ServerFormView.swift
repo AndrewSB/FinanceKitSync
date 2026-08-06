@@ -11,7 +11,12 @@ struct ServerFormView: View {
     @Binding var urlText: String
     @Binding var tokenText: String
 
+#if DEBUG
+    @State private var testResult: TestResult? =
+        ScreenshotMode.showsPassedConnectionTest ? .ok : nil
+#else
     @State private var testResult: TestResult?
+#endif
     @State private var isTesting = false
 
     enum TestResult: Equatable {

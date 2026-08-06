@@ -101,6 +101,21 @@ final class SyncCoordinator {
         }
     }
 
+#if DEBUG
+    /// Overwrites the published state with fabricated values so App Store
+    /// screenshots don't have to be taken from real transactions.
+    /// See `ScreenshotMode`. Debug builds only.
+    func seedForScreenshots(
+        state: State, lastSyncDate: Date?, lastSentCount: Int, acknowledgedCount: Int
+    ) {
+        self.state = state
+        self.lastSyncDate = lastSyncDate
+        self.lastError = nil
+        self.lastSentCount = lastSentCount
+        self.acknowledgedCount = acknowledgedCount
+    }
+#endif
+
     // MARK: - Background tasks
 
     func registerBackgroundTask() {

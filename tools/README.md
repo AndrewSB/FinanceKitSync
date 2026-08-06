@@ -20,12 +20,44 @@ export ASC_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_XXXXXXXXXX.p8
 | `asc.py` | Minimal API client. Signs its own ES256 JWT with `cryptography`, because PyJWT has no wheel for the Python 3.14 on this machine. |
 | `listing.json` | The App Store listing, as data. Edit this, not the web form. |
 | `push_listing.py` | Pushes `listing.json`. Idempotent; dry-run by default. |
+| `screenshots.sh` | Captures the five listing screens at both required sizes, from synthetic data. |
+| `push_screenshots.py` | Uploads what `screenshots.sh` produced. Idempotent; dry-run by default. |
+| `ExportOptions.plist` | Re-signs the archive for the App Store. A plain `archive` is signed for development and App Store Connect rejects it. |
 
 ```bash
-python3 tools/asc.py whoami            # verify credentials
-python3 tools/push_listing.py          # show what would change
-python3 tools/push_listing.py --apply  # write it
+python3 tools/asc.py whoami              # verify credentials
+python3 tools/push_listing.py            # show what would change
+python3 tools/push_listing.py --apply    # write it
+
+./tools/screenshots.sh                   # capture
+python3 tools/push_screenshots.py --apply
 ```
+
+### Shipping a build
+
+```bash
+cd app && xcodebuild -project FinanceKitSync.xcodeproj -scheme FinanceKitSync \
+  -sdk iphoneos -destination 'generic/platform=iOS' -configuration Release \
+  -allowProvisioningUpdates -archivePath ../build/FinanceKitSync.xcarchive archive
+
+env PATH=/usr/bin:/bin:/usr/sbin:/sbin xcodebuild -exportArchive \
+  -archivePath build/FinanceKitSync.xcarchive -exportPath build/export \
+  -exportOptionsPlist tools/ExportOptions.plist -allowProvisioningUpdates \
+  -authenticationKeyPath "$ASC_KEY_PATH" \
+  -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+xcrun altool --upload-app -f build/export/FinanceKitSync.ipa -t ios \
+  --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+```
+
+> The scrubbed `PATH` on the export is load-bearing, not superstition. Homebrew's
+> rsync 3.4.4 shadows `/usr/bin/rsync`, and Xcode's IPA packaging step calls
+> `rsync -E`, which it rejects. The failure surfaces as an unexplained
+> "Copy failed".
+>
+> `altool` finds the key by ID, searching `./private_keys`, `~/private_keys`,
+> `~/.private_keys`, and `~/.appstoreconnect/private_keys` — it ignores
+> `ASC_KEY_PATH`, so the `.p8` has to actually be in one of those.
 
 ### The app record must be created by hand, once
 

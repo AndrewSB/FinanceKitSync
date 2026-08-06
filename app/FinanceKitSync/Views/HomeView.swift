@@ -6,7 +6,11 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(SyncCoordinator.self) private var coordinator
+#if DEBUG
+    @State private var showingSettings = ScreenshotMode.showsSettings
+#else
     @State private var showingSettings = false
+#endif
 
     var body: some View {
         NavigationStack {

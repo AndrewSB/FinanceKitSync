@@ -11,7 +11,18 @@ struct FinanceKitSyncApp: App {
 
     /// Onboarding is considered done once a server is configured — there's no
     /// separate "seen it" flag to get out of sync with reality.
-    @State private var hasCompletedOnboarding = ServerConfig.isConfigured
+    @State private var hasCompletedOnboarding = FinanceKitSyncApp.bootstrap()
+
+    /// Runs before the onboarding decision is made, because in screenshot mode
+    /// the seeded config is what that decision has to read. Returns whatever
+    /// `hasCompletedOnboarding` should start as.
+    @MainActor
+    private static func bootstrap() -> Bool {
+#if DEBUG
+        ScreenshotMode.prepare()
+#endif
+        return ServerConfig.isConfigured
+    }
 
     init() {
         // Must happen before the app finishes launching.

@@ -207,6 +207,16 @@ Both point at the landing page — see [`workstream-landing.md`](./workstream-la
 
 ## Step 3 — Privacy nutrition labels
 
+> **Web UI only — there is no API for this.** Checked against the live API on
+> 2026-08-06: `apps` exposes no privacy or data-usage relationship, and
+> `/v1/appDataUsages`, `/v1/appDataUsageCategories`, and
+> `appDataUsagesPublishState` all 404. Unlike the listing metadata, this one
+> genuinely cannot be scripted — it's four clicks in App Store Connect:
+>
+> **App Store Connect → FinanceKit Sync → App Privacy → Get Started →** answer
+> **"No"** to *Do you or your third-party partners collect data from this app?*
+> → **Publish**.
+
 This is the section most likely to trip you up, because the honest answer is
 unusual. Work through it as: *does the developer collect this?*
 
@@ -244,9 +254,8 @@ Paste into "Notes for Review". Reviewers cannot test this app without a server,
 so give them one.
 
 > This app reads the user's Apple Card, Apple Cash, and Apple Pay transactions
-> and presents balances, net worth, and spending trends on device. It also lets
-> the user mirror that data to a personal server address they configure — there
-> is no hosted backend, and no data reaches us.
+> via FinanceKit and mirrors them to a personal server address the user
+> configures. There is no hosted backend, no account, and no data reaches us.
 >
 > To review the sync feature end to end you'll need a test endpoint.
 >
@@ -263,9 +272,46 @@ so give them one.
 > The full server source is at github.com/AndrewSB/FinanceKitSync under
 > `server/`, and is about 200 lines.
 
-> **Before submitting:** stand up a throwaway server for this, with its own
-> token, containing only synthetic data. Do not give App Review the token to
-> `box`. `server/deploy.sh` will spin up a second instance on any host.
+> **Two corrections to the text above, both made 2026-08-06.**
+>
+> It previously claimed the app *"presents balances, net worth, and spending
+> trends on device."* **It does not** — none of those screens exist. That
+> sentence was drafted back when the plan was to build a financial-management
+> surface in order to qualify for the entitlement, a plan since withdrawn (see
+> step 0). Telling App Review the app does something it visibly doesn't is a
+> rejection waiting to happen, so it now describes the app as built.
+>
+> The note below also said `server/deploy.sh` "will spin up a second instance on
+> any host." It won't, as written — see the gap listed under it.
+
+### The throwaway review server
+
+**Before submitting:** stand up a separate server for this, with its own token,
+containing only synthetic data. Do not give App Review the token to `box`.
+
+**This is not yet done, and it is not a one-liner.** `deploy.sh` is
+parameterized by `FKS_HOST`, `FKS_REMOTE_DIR`, and `FKS_FUNNEL_PORT`, but three
+things are hardcoded and would collide with the live instance:
+
+| | |
+|---|---|
+| `LOCAL_PORT=8501` | `deploy.sh`, and the published port in `docker-compose.yml` |
+| `container_name: financekitsync` | `docker-compose.yml` — Docker refuses a second container with the same name |
+| `image: financekitsync:latest` | shared, so a rebuild for one instance silently swaps the other's image |
+
+So a second instance needs those three parameterized first — roughly a
+30-line change to `docker-compose.yml` and `deploy.sh` — or a second host.
+
+It also needs **Funnel**, because App Review is not on the tailnet. Read the
+warning in `deploy.sh` before enabling it: Funnel is per-port, not per-path,
+and turning it on for a port publishes every route on that port. Use a port
+that serves nothing else. The 2026-08-04 incident in
+[`STATUS.md`](./STATUS.md) is what happens otherwise.
+
+Finally it needs synthetic contents: the reviewer's device will have no Apple
+Card history, so a sync there reports zero transactions and the database stays
+empty. Seed it by POSTing a handful of invented packets to
+`/financekit-sync` with the review token before submitting.
 
 ---
 

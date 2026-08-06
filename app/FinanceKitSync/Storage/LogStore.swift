@@ -71,6 +71,15 @@ final class LogStore {
             .joined(separator: "\n")
     }
 
+#if DEBUG
+    /// Replaces the log with fabricated entries for App Store screenshots.
+    /// Deliberately does not persist — nothing invented should outlive the run.
+    /// See `ScreenshotMode`. Debug builds only.
+    func seedForScreenshots(_ seeded: [LogEntry]) {
+        entries = seeded
+    }
+#endif
+
     // MARK: - Persistence
 
     private static var fileURL: URL? {

@@ -47,35 +47,32 @@ configuration needed. The scripts must stay executable — if that's ever lost,
 
 ## Connection status
 
-**Connected.** Xcode wrote
-`app/FinanceKitSync.xcodeproj/xcshareddata/xcodecloud/manifest.json`:
-
-| | |
-|---|---|
-| Product ID | `1eeb2fcc-69bc-4b1a-9296-7095ddc94e93` |
-| Target ID | `937ce9c4-6e56-43d2-aaf1-b3edaa9e8195` (`FinanceKitSync`) |
-
-That file is tracked in git — it's shared, not per-user.
-
-## ⚠️ Archiving is blocked until the entitlement lands
-
-Worth being clear before you build any of these: **any workflow with an Archive
-action will fail at signing** until Apple approves the FinanceKit entitlement.
-Not "produces a broken build" — the build errors out:
+**Not connected.** This section previously said "Connected" on the strength of
+Xcode having written
+`app/FinanceKitSync.xcodeproj/xcshareddata/xcodecloud/manifest.json`. Checked
+against the API on 2026-08-06, that file describes a product App Store Connect
+has never heard of:
 
 ```
-Provisioning profile "..." doesn't include the FinanceKit capability.
-Entitlement com.apple.developer.financekit requires approval from Apple.
+GET /v1/ciProducts            → only "Dock Me" and "involved"
+GET /v1/ciProducts/1eeb2fcc-…  → 404 NOT_FOUND
+GET /v1/apps/6797988167/ciProduct → empty
 ```
 
-So today, only workflow 1 (Build + Test, no signing) will go green. Workflows 2
-and 3 are worth creating now so they're ready, but expect them to fail until
-approval — or set `FKS_UNENTITLED = 1` on workflow 2 to get an installable (but
-data-blind) TestFlight build for UI testing.
+So the manifest is a local leftover from a setup that didn't complete, not
+evidence of a connection. **There are no workflows for this app**, which also
+means there is no `FKS_UNENTITLED` anywhere to remove — see below.
 
-**For today's device test, don't wait on Xcode Cloud.** Build straight to the
-iPhone from Xcode with the unentitled variant — it's one step instead of a
-cloud round trip, and it's the same resulting app.
+The manifest is tracked in git and harmless; Xcode will overwrite it with real
+IDs when the setup below is actually finished.
+
+## ✅ Archiving is no longer blocked
+
+This section used to warn that any workflow with an Archive action would fail at
+signing. **Resolved 2026-08-06** — the FinanceKit capability was enabled on the
+App ID, Xcode minted a profile carrying `com.apple.developer.financekit`, and a
+local Release device build signs. All three workflows below can be created and
+run as written, with no escape hatch on any of them.
 
 ## Workflows
 
@@ -107,7 +104,7 @@ your safety net on every PR.
 | Environment | Xcode 27.x, macOS latest |
 | Actions | **Archive** (scheme `FinanceKitSync`, **Deployment Preparation: TestFlight (Internal Testing Only)**) |
 | Post-Actions | **TestFlight Internal Testing** → your internal group |
-| Environment Variables | `FKS_UNENTITLED` = `1` *(temporary — see above; delete after approval)* |
+| Environment Variables | **none** — the entitlement is approved, so this builds with the real one |
 
 ### 3. `Release` — manual, ships to review
 
@@ -135,22 +132,24 @@ re-creatable — put the `.p8` somewhere gitignored, tell me the path, and I'll
 write a script that creates all three idempotently. Worth doing if you expect to
 tweak them; not worth it if you'll set them once and forget.
 
-## The `FKS_UNENTITLED` escape hatch
+## The `FKS_UNENTITLED` escape hatch — retired
 
-Signing fails today, because the FinanceKit entitlement isn't approved yet:
+Setting `FKS_UNENTITLED=1` made `ci_post_clone.sh` swap in
+`app/Supporting/FinanceKitSync-Unentitled.entitlements`, so the pipeline could be
+built and validated while signing was impossible. Those builds installed and ran
+but read no financial data.
 
-```
-error: Entitlement com.apple.developer.financekit requires approval from Apple
-to include in a profile.
-```
+**No longer needed, and it must not be set on any workflow.** The entitlement was
+approved and provisioned on 2026-08-06.
 
-Setting `FKS_UNENTITLED=1` makes `ci_post_clone.sh` swap in
-`app/Supporting/FinanceKitSync-Unentitled.entitlements`, so the pipeline can be
-built and validated in the meantime. Those builds install and run but read no
-financial data.
+Verified 2026-08-06 that it is set nowhere: the only Xcode Cloud products on this
+team are *Dock Me* and *involved*, neither of which defines any environment
+variables, and FinanceKitSync has no product at all.
 
-**Remove `FKS_UNENTITLED` from workflows 1 and 2 the day the entitlement is
-approved,** and never set it on `Release`. See [`app-store.md`](./app-store.md).
+The mechanism stays in `ci_post_clone.sh` — it costs nothing, and it is the
+fastest way back to a green pipeline if the entitlement is ever revoked or a
+future bundle ID has to be re-approved. But a build produced with it is data-blind
+and must never be shipped.
 
 ## Verifying locally
 
@@ -164,11 +163,11 @@ xcodebuild -project FinanceKitSync.xcodeproj -scheme FinanceKitSync \
   -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
   CODE_SIGNING_ALLOWED=NO build
 
-# What "Main" does today, pre-approval
+# What "Main" and "Release" do — the real entitlement, no override
 xcodebuild -project FinanceKitSync.xcodeproj -scheme FinanceKitSync \
   -sdk iphoneos -destination 'generic/platform=iOS' -configuration Release \
-  -allowProvisioningUpdates \
-  CODE_SIGN_ENTITLEMENTS=Supporting/FinanceKitSync-Unentitled.entitlements build
+  -allowProvisioningUpdates build
 ```
 
-Both are confirmed passing as of 2026-08-04.
+Both are confirmed passing as of 2026-08-06, the second one now signing with the
+real FinanceKit entitlement.
