@@ -47,24 +47,28 @@ configuration needed. The scripts must stay executable — if that's ever lost,
 
 ## Connection status
 
-**Not connected.** This section previously said "Connected" on the strength of
-Xcode having written
-`app/FinanceKitSync.xcodeproj/xcshareddata/xcodecloud/manifest.json`. Checked
-against the API on 2026-08-06, that file describes a product App Store Connect
-has never heard of:
+**Connected**, and has been since 2026-08-04.
 
-```
-GET /v1/ciProducts            → only "Dock Me" and "involved"
-GET /v1/ciProducts/1eeb2fcc-…  → 404 NOT_FOUND
-GET /v1/apps/6797988167/ciProduct → empty
-```
+| | |
+|---|---|
+| Product ID | `937ce9c4-6e56-43d2-aaf1-b3edaa9e8195`, created 2026-08-04 |
+| Repository | `AndrewSB/FinanceKitSync` via the `GITHUB_CLOUD` provider |
+| Workflows | `Default` (build on `main`) and `Release` (manual archive) |
 
-So the manifest is a local leftover from a setup that didn't complete, not
-evidence of a connection. **There are no workflows for this app**, which also
-means there is no `FKS_UNENTITLED` anywhere to remove — see below.
-
-The manifest is tracked in git and harmless; Xcode will overwrite it with real
-IDs when the setup below is actually finished.
+> **A wrong entry was here, and it's worth recording why.** On 2026-08-06 this
+> section was rewritten to say "Not connected", on the evidence that
+> `GET /v1/ciProducts` returned only *Dock Me* and *involved*, that the product
+> ID in `manifest.json` 404'd, and that `apps/6797988167/ciProduct` was empty.
+> All three were real responses. But the product had existed since 2026-08-04
+> the whole time, with 17 build runs behind it — it simply wasn't listed. The
+> `manifest.json` ID (`1eeb2fcc-…`) is stale, but the *target* ID in that same
+> file matches the live product, so the file was never the fabrication it was
+> accused of being.
+>
+> Why the API omitted it is unresolved. The lesson is narrower than "the API
+> lies": an empty collection response is weaker evidence than a positive one,
+> and "X does not exist" deserves a second, differently-shaped query before it
+> gets written down as fact.
 
 ## ✅ Archiving is no longer blocked
 
@@ -142,9 +146,8 @@ but read no financial data.
 **No longer needed, and it must not be set on any workflow.** The entitlement was
 approved and provisioned on 2026-08-06.
 
-Verified 2026-08-06 that it is set nowhere: the only Xcode Cloud products on this
-team are *Dock Me* and *involved*, neither of which defines any environment
-variables, and FinanceKitSync has no product at all.
+Verified 2026-08-06 against this app's own workflows: both `Default` and
+`Release` report `environmentVariables: None`.
 
 The mechanism stays in `ci_post_clone.sh` — it costs nothing, and it is the
 fastest way back to a green pipeline if the entitlement is ever revoked or a

@@ -36,7 +36,7 @@ Verified end to end on 2026-08-06 — the signed binary carries:
 | App record | `6797988167`, version 1.0, `PREPARE_FOR_SUBMISSION` |
 | Listing metadata | ✅ complete |
 | Privacy / support / marketing URLs | ✅ set and serving |
-| Builds uploaded | ✅ **1.0 (1)** — `VALID`, attached to the version |
+| Builds uploaded | ⚠️ **1.0 (1)** — `VALID` and attached, but **built with Xcode 27 beta, so not submittable**. Superseded by the Xcode Cloud `Release` build |
 | Screenshot sets | ✅ **2** (6.9" and 6.5"), 5 images each, all `COMPLETE` |
 | Privacy nutrition labels | 🔴 **not started — web UI only, no API** |
 | Throwaway review server | 🔴 **not stood up** |
@@ -118,7 +118,7 @@ enabled on `:8443` — read the warning in `server/deploy.sh` first.
 | A | [iOS app](./workstream-app.md) | Claude | 🟡 signs with the real entitlement, 44 tests pass; **still unproven on device** | Device test |
 | B | [Server on `box`](./workstream-server.md) | Claude | 🟢 deployed, 13/13 protocol checks | — (exposure decision open) |
 | C | [Landing / privacy / support](./workstream-landing.md) | Claude | 🟢 live on GitHub Pages | — (copy says old name) |
-| D | [Xcode Cloud](./xcode-cloud.md) | Claude | 🔴 **not connected** — the "connected" claim was a stale local manifest; no product, no workflows | The GitHub grant, which needs Andrew |
+| D | [Xcode Cloud](./xcode-cloud.md) | Claude | 🟢 connected since 2026-08-04; `Default` + `Release` workflows, both pinned to Xcode 26.6 GM | — |
 | E | [App Store](./app-store.md) / [listing](./listing.md) | Andrew | 🟡 metadata, build, and screenshots done | 🔴 Privacy labels + review server |
 
 ## Decisions made
@@ -382,12 +382,26 @@ Everything else is either done or gated on Apple. See
   two byte-identical frames — deadlocks on the one scene with a spinner. The
   capture now waits for two consecutive frames carrying content, and *fails the
   run* rather than shipping a blank.
-- **2026-08-06** — **Xcode Cloud was never connected.** This file and
-  `xcode-cloud.md` both claimed it was, on the strength of a `manifest.json`
-  Xcode had written locally. The product ID in it 404s, `/v1/ciProducts` lists
-  only *Dock Me* and *involved*, and `apps/6797988167/ciProduct` is empty. So
-  there were no workflows, and the `FKS_UNENTITLED` removal that headed the
-  resume runbook was a no-op — there was nothing to remove.
+- **2026-08-06** — **Retracted, same day: "Xcode Cloud was never connected."**
+  That claim was entered in this log and in `xcode-cloud.md` on the evidence
+  that `/v1/ciProducts` listed only *Dock Me* and *involved*, that the
+  `manifest.json` product ID 404'd, and that `apps/6797988167/ciProduct` was
+  empty. Those were the API's actual responses, and the conclusion drawn from
+  them was still wrong: the product `937ce9c4-…` had existed since 2026-08-04
+  with 17 build runs behind it. Why it wasn't listed is unresolved. What holds
+  is the narrower point — `FKS_UNENTITLED` is set nowhere, now confirmed
+  against this app's own workflows (`Default` and `Release`, both
+  `environmentVariables: None`) rather than inferred from a product that
+  appeared not to exist.
+- **2026-08-06** — **The App Store build has to come from Xcode Cloud, not this
+  machine.** The only Xcode installed locally is 27.0 beta 4 (`27A5228h`) with
+  the iOS 27 beta SDK, and Apple rejects submissions built with beta tooling —
+  so build 1.0 (1), uploaded earlier today, can sit in TestFlight but cannot be
+  submitted. Xcode Cloud's `Latest Release` is `17F113` (Xcode 26.6, GM), and
+  both workflows are pinned to it. Deployment target is iOS 18.0, so nothing
+  here needs the 27 SDK. Andrew declined installing a GM Xcode locally, which
+  is also the better call — it keeps the shipping binary coming from one
+  reproducible place instead of a laptop.
 - **2026-08-06** — Corrected a claim in the "Notes for Review" draft that the
   app *"presents balances, net worth, and spending trends on device."* It does
   not; those screens were never built. The sentence dated from the withdrawn
