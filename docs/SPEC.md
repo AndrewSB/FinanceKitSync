@@ -47,11 +47,11 @@ The upstream LunchSync app holds this entitlement under team `MF7QJ9TF5S`
 (littlebluebug). **That approval does not transfer.** FinanceKitSync needs its
 own approval under `A29347X2JZ` for bundle ID `com.asb.FinanceKitSync`.
 
-> **Naming caveat:** App Review discourages App Store *display names* built from
-> Apple technology names. `FinanceKitSync` is safe as the repo name, Xcode
-> project name, and bundle ID, but the customer-facing name on the store listing
-> should probably differ (e.g. "Ledgerline", "Card Mirror"). This costs nothing
-> to change later and is tracked in [`app-store.md`](./app-store.md).
+> **Naming caveat — decided.** App Review discourages App Store *display names*
+> built from Apple technology names, and alternatives were drafted. The store
+> name is **"FinanceKit Sync"** anyway, a deliberate risk taken on 2026-08-04:
+> worst case is a metadata rejection fixable the same day without a new binary.
+> Rationale in [`listing.md`](./listing.md). Not settled until 1.0 is approved.
 
 ---
 
@@ -271,9 +271,9 @@ Full deployment detail: [`workstream-server.md`](./workstream-server.md).
 
 ## 8. Open questions
 
-- [ ] App Store display name, pending the "FinanceKit" naming caveat in §2.
-- [ ] Does the entitlement request need a working demo build attached? (Apple has
-      asked for this on some financial-data requests.)
+- [x] App Store display name — "FinanceKit Sync", risk accepted. See §2.
+- [x] Does the entitlement request need a working demo build attached? — no,
+      Apple approved `453VPT726K` without asking for one.
 - [ ] Should v1 ship a QR-code pairing flow instead of typing a token on a phone
       keyboard? Strong UX win; deferred to v1.1 unless the entitlement wait gives
       us free time.

@@ -1,154 +1,72 @@
 # App Store submission
 
-Everything needed to submit, in the order it has to happen. **You** perform the
-account actions — I don't have and shouldn't have access to your Apple account.
+Everything needed to submit, in the order it has to happen.
+
+> **1.0 is submitted** — build 25, `WAITING_FOR_REVIEW`. This document is now
+> mostly a record of how it got there and what is still owed. For the mechanics
+> of producing and submitting a build, see [`releasing.md`](./releasing.md); for
+> current state, [`STATUS.md`](./STATUS.md).
 
 ---
 
-## ⚠️ Step 0 — Eligibility. Read this before writing any more code.
+## ✅ Step 0 — Eligibility. Resolved.
 
-Apple publishes explicit criteria for the FinanceKit entitlement, and **the app
-as currently specified does not meet all of them.** Verified against
-<https://developer.apple.com/financekit/> on 2026-08-04.
+The FinanceKit entitlement was **requested 2026-08-04 and approved 2026-08-06**
+(`453VPT726K`, bundle `com.asb.FinanceKitSync`, team `A29347X2JZ`). Nothing in
+this step remains to be done; it is kept only because two predictions made here
+were wrong in ways worth remembering.
 
-| Apple's criterion | FinanceKitSync today | |
-|---|---|---|
-| Request submitted by the **Account Holder** of the developer account | Andrew is the Account Holder of `A29347X2JZ` | ✅ |
-| Held under an **organization-level** account (per Apple's guidance and developer-forum reports) | `A29347X2JZ` is registered as "Andrew Breckenridge" — very likely an **Individual** account | ❓ **verify** |
-| Listed in the **Finance category** in App Store Connect | Planned as Finance | ✅ |
-| Distributed through the **App Store for iPhone in the US or UK** | Planned | ✅ |
-| **"Provide financial management tools (for example, a comprehensive view of net worth, spending trends, budgeting)"** | SPEC §1 explicitly rules these out: *"No budgeting, categorization, charts, or analytics in the app."* | ❌ **conflict** |
-
-### Update 2026-08-04 — this criterion is applied loosely
-
-The analysis below was written before checking a known approval. **LunchSync**
-(<https://apps.apple.com/us/app/lunch-sync/id6739702427>) holds this entitlement,
-sits in the Finance category, and describes itself purely as *"a way to sync
-transactions from your Apple Card or other Wallet accounts to your Lunch Money
-account."* It provides no net worth view, no balances, no trends, and no
-budgeting — those live in Lunch Money, a separate app.
-
-So a pure sync/export tool demonstrably qualifies. The conclusion below that
-FinanceKitSync's shape disqualifies it was **too pessimistic**, and the
-recommendation to build financial-management features *in order to qualify* is
-withdrawn. Build them because they make the app better, not because Apple
-requires them.
-
-The observed risk has moved almost entirely to **account type** — LunchSync's
-seller is *LittleBlueBug Software, LLC*, an Organization account, while
-`A29347X2JZ` is Individual. See [`STATUS.md`](./STATUS.md).
-
-*Original analysis, retained for context:*
-
-### The problem (superseded — see above)
-
-FinanceKitSync is deliberately a pure data-export utility — it reads
-transactions and forwards them, and does nothing else. That is exactly what
-Apple's last criterion excludes. An app whose entire pitch is "we don't analyze
-your data, we just move it" is a poor fit for a criterion that asks for net
-worth views, spending trends, and budgeting.
-
-This is a product-level risk, not a paperwork one. It cannot be fixed by
-wording the request more carefully.
-
-### Options
-
-1. **Add a genuine financial-management surface to the app** *(recommended)*.
-   The app already reads every account balance and the full transaction
-   history — the data for a net-worth total, per-account balances, and a
-   spending-trend view is *already in memory* during a sync and currently
-   thrown away. Building an in-app Accounts tab and a simple monthly
-   spending-by-category view is a modest addition that turns a ❌ into a ✅,
-   and makes the app more useful on its own terms. Syncing to your own server
-   then becomes a headline feature rather than the only feature.
-
-2. **Submit as-is and argue the case.** Faster, but the criterion is stated
-   plainly and the app visibly doesn't meet it. Expect rejection.
-
-3. **Ship without the App Store.** A personal/dev build works on a registered
-   device — but note that even a development build needs the entitlement, so
-   this only works if Apple grants it, which lands back at option 1.
-
-**Recommendation: option 1.** It is a few days of work, it addresses the only
-hard blocker, and it doesn't compromise the privacy story at all — the analysis
-happens on-device, on data the app already holds.
-
-### Also verify before filing
-
-**Is `A29347X2JZ` an Individual or Organization account?** Check at
-<https://developer.apple.com/account> → Membership. If it's Individual and
-Apple requires Organization, converting needs a **D-U-N-S number** and takes
-one to several weeks — which would become the new critical path, ahead of
-everything else. This is the single highest-value thing to check right now.
-
-## Step 0b — Submitting the request
-
-**Where:** <https://developer.apple.com/contact/request/financekit>
-
-**Team ID:** `A29347X2JZ`
-**Bundle ID:** `com.asb.FinanceKitSync` *(already registered — Xcode created it
-during a provisioning run on 2026-08-04)*
-
-Entitlements are granted **per bundle ID**, and can only be used with the
-single binary associated with that bundle ID.
-
-### Draft request text
-
-> FinanceKitSync is a personal-data-portability utility. It reads the user's
-> Apple Card, Apple Cash, and Apple Pay transaction history via FinanceKit and
-> transmits it, over TLS, to a server address that the user themselves supplies
-> and operates.
->
-> There is no backend operated by us. The app has no accounts, no analytics, and
-> no third-party SDKs. The only network destination is the URL the user enters
-> during setup, authenticated with a bearer token they also supply. Transaction
-> data is never sent anywhere else and is never retained on our infrastructure,
-> because we do not have any.
->
-> On the device, the app stores only bookkeeping: for each transaction it has
-> already delivered, a FinanceKit identifier, a SHA-256 content hash used to
-> detect corrections, and a timestamp. No amounts, merchants, or dates are
-> persisted locally.
->
-> We request the `financial-data` capability because reading the user's
-> transaction history is the app's entire function. Users commonly want their
-> own spending data in their own database, spreadsheet, or budgeting tool, and
-> FinanceKit is the only supported way to obtain it on iOS.
->
-> This capability is already approved for a related app, LunchSync
-> (`com.littlebluebug.AppleCardSync`, team MF7QJ9TF5S), which syncs the same
-> data to one specific budgeting service. FinanceKitSync is the generalized
-> version, published under a different team by agreement with that app's owner.
-
-Adjust the last paragraph if the relationship is better left unmentioned —
-it's offered because Apple sometimes asks how a request relates to an existing
-approved app, and volunteering it is usually better than being asked.
-
-> **If Apple asks for a demo build:** they occasionally do for financial-data
-> requests. TestFlight is the easiest delivery, which means the `Release`
-> workflow needs to have run at least once — but that workflow needs the
-> entitlement. If this happens, reply asking whether an unentitled build plus a
-> screen recording will do; that combination has satisfied similar requests.
-
----
-
-## Step 1 — Decide the display name
-
-The bundle ID and repo name can stay `FinanceKitSync`. The **App Store display
-name** probably should not: App Review guideline 4.1 and Apple's trademark
-guidance both discourage app names built from Apple technology names, and
-"FinanceKit" is one. This is a cheap thing to get right up front and an annoying
-one to fix mid-review.
-
-Candidates, in rough order of preference:
-
-| Name | Note |
+| Apple's criterion | How it actually went |
 |---|---|
-| **Ledgerline** | No conflict, reads like a product, leaves room to grow |
-| **Card Mirror** | Describes the function; "mirror" is already the project's vocabulary |
-| **Transaction Export** | Maximally literal, poor differentiation |
+| Request submitted by the **Account Holder** | ✅ as expected |
+| Held under an **organization-level** account | ✅ **approved on an Individual account.** The requirement appears in the FinanceKit API docs but is not enforced at request time. This file rated it the single largest risk. It wasn't one. |
+| Listed in the **Finance category**, US App Store | ✅ as expected |
+| **"Provide financial management tools"** (net worth, spending trends, budgeting) | ✅ **approved without any of them.** This app is a pure export tool and says so. |
 
-Subtitle (30 char limit): `Your transactions, your server`
+The plan this document once recommended — building an Accounts + Trends surface
+*in order to qualify* — is **withdrawn**. It was reasoned from Apple's published
+criteria, which read as hard requirements and are not applied that way.
+LunchSync (<https://apps.apple.com/us/app/lunch-sync/id6739702427>) holds the
+same entitlement as a pure sync tool with no analysis features at all. Build
+those screens on product merit or not at all.
+
+**What actually cost time was the step after approval**, which nothing here
+anticipated: being granted the entitlement does not enable the capability on the
+App ID, and automatic signing keeps minting profiles without it, failing with an
+identical error every time. See [`STATUS.md`](./STATUS.md).
+
+## Step 0b — Submitting the request — done
+
+Filed 2026-08-04 at <https://developer.apple.com/contact/request/financekit>
+for team `A29347X2JZ` / bundle `com.asb.FinanceKitSync`, using the "Version B"
+text (the app as it is, with no financial-management features). Approved
+2026-08-06. The full drafts are archived in
+[`archive/entitlement-request-text.md`](./archive/entitlement-request-text.md).
+
+Entitlements are granted **per bundle ID** and only work with the single binary
+associated with it — worth remembering if a second app ever needs one.
+
+Apple did not ask for a demo build, which had been a worry: the `Release`
+workflow could not run without the entitlement it was being asked to prove.
+
+---
+
+## Step 1 — Display name — decided
+
+**"FinanceKit Sync"**, set on the App Store Connect record and currently in
+review under that name. Subtitle: `Your transactions, your server`.
+
+This went against the advice this section used to give. App Review guideline
+4.1 and Apple's trademark guidance both discourage names built from Apple
+technology names, and alternatives were drafted (*Ledgerline*, *Card Mirror*,
+*Transaction Export*). The risk was accepted deliberately on 2026-08-04:
+"FinanceKit" is absent from Apple's published trademark list while every sibling
+framework is registered, and the worst case is a metadata rejection fixable the
+same day without a new binary. See [`listing.md`](./listing.md).
+
+Still unresolved, and cosmetic: the app itself has no `CFBundleDisplayName`, so
+the Home Screen icon and `HomeView` title both read "FinanceKitSync" while the
+store says "FinanceKit Sync".
 
 ---
 
@@ -332,17 +250,23 @@ screenshot your own transaction history.
 
 ## Submission checklist
 
-- [ ] FinanceKit entitlement requested *(step 0 — do this today)*
-- [ ] Entitlement approved
-- [ ] `FKS_UNENTITLED` removed from all Xcode Cloud workflows
-- [ ] Display name decided and set
-- [ ] Landing page live, URL in App Store Connect
-- [ ] Throwaway review server running with synthetic data
-- [ ] Privacy labels completed
-- [ ] Screenshots captured from synthetic data
-- [ ] `Release` workflow run, build in TestFlight
-- [ ] Internal TestFlight pass on a real device with real transactions
-- [ ] Submit
+- [x] FinanceKit entitlement requested — 2026-08-04
+- [x] Entitlement approved — 2026-08-06 — **and enabled on the App ID**, which
+      is a separate manual step
+- [x] `FKS_UNENTITLED` removed from all Xcode Cloud workflows — verified, set
+      nowhere
+- [x] Display name decided and set — "FinanceKit Sync"
+- [x] Landing page live, URL in App Store Connect
+- [x] Privacy labels completed
+- [x] Screenshots captured from synthetic data — 2 sets × 5, all `COMPLETE`
+- [x] `Release` workflow run, build uploaded
+- [x] Submit — build 25, submission `f3daf509-…`
+- [ ] **Throwaway review server running with synthetic data** — not done, by
+      decision. See below; it is the most likely cause of a 2.1 rejection.
+- [ ] **Pass on a real device with real transactions** — 🔴 **never done.** The
+      one item on this list that has never been attempted, and the reason a
+      build that could not request the Wallet permission reached App Review.
+      See [`device-test.md`](./device-test.md).
 
 ---
 

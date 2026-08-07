@@ -1,11 +1,25 @@
 # FinanceKit entitlement — explanation box
 
+> **Archived — the request was approved.** Filed 2026-08-04 as `453VPT726K`
+> using **Version B**, approved 2026-08-06. Kept for the wording, and because
+> the prediction below turned out to be wrong.
+>
+> ⚠️ **Both drafts below say "NSFinancialDataDescription is set in Info.plist."
+> That key does not exist**; iOS reads `NSFinancialDataUsageDescription`. This
+> is the earliest appearance of the typo that later shipped in build 19 and made
+> the app unable to request the Wallet permission — the text is left uncorrected
+> because it is what was actually sent to Apple. See [`../STATUS.md`](../STATUS.md).
+
 Draft text for the explanation field at
 <https://developer.apple.com/contact/request/financekit>.
 
-Two versions. **A** is the one to send, and requires the on-device financial
-management surface described in [`app-store.md`](./app-store.md) §0 to exist
-first. **B** describes the app as it stands today and is likely to be rejected.
+Two versions. **A** was the recommended one, requiring an on-device financial
+management surface that was never built. **B** described the app as it actually
+was and was expected to be rejected for lacking those features.
+
+**B was sent, and approved.** Apple's "financial management tools" criterion is
+not applied as strictly as its wording suggests — see
+[`../app-store.md`](../app-store.md) §0.
 
 ---
 
@@ -108,7 +122,7 @@ cite that.
 ## Before submitting, confirm
 
 - [ ] Signed in as **Account Holder**
-- [ ] Account is **Organization**-level (see [`app-store.md`](./app-store.md) §0)
+- [ ] Account is **Organization**-level (see [`app-store.md`](../app-store.md) §0)
 - [ ] App record exists with **Finance** primary category and **US** availability
 - [ ] Final app name substituted for `[App Name]` throughout
 - [ ] The claims in the text match what the app actually does at review time

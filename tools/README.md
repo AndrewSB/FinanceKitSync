@@ -23,6 +23,7 @@ export ASC_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_XXXXXXXXXX.p8
 | `screenshots.sh` | Captures the five listing screens at both required sizes, from synthetic data. |
 | `push_screenshots.py` | Uploads what `screenshots.sh` produced. Idempotent; dry-run by default. |
 | `ExportOptions.plist` | Re-signs the archive for the App Store. A plain `archive` is signed for development and App Store Connect rejects it. |
+| `submit_for_review.py` | Attaches a processed build to the editable version and submits it for App Store review — the step Xcode Cloud cannot do. Also run from CI by `ci_scripts/ci_post_xcodebuild.sh`. See [`../docs/releasing.md`](../docs/releasing.md). |
 
 ```bash
 python3 tools/asc.py whoami              # verify credentials

@@ -1,37 +1,28 @@
-# Device test — what's possible before the entitlement
+# Device test
 
-## What you can and can't verify
+**Nothing in this repo has ever run on an iPhone.** That is the single largest
+gap in the project, and it is not a theoretical one: build 19 reached App Review
+unable to request the Wallet permission at all, and thirty seconds on hardware
+would have caught it. The simulator cannot substitute — `isDataAvailable`
+returns `true` there and the first real query **traps** inside FinanceKit, which
+is why `SyncEngine` refuses to touch it on simulator at all.
 
-Without `com.apple.developer.financekit`, a device build must be signed with the
-unentitled variant. On real hardware that build behaves predictably:
-`FinanceStore.isDataAvailable(.financialData)` returns **false**, so the engine
-throws a clean, user-visible error instead of reading anything.
-
-| | |
-|---|---|
-| ✅ Installs and launches on hardware | |
-| ✅ Onboarding flow, all three steps | |
-| ✅ Connection test against the real server — reachable / 401 / wrong-server / OK | |
-| ✅ Settings, log view, share sheet | |
-| ✅ Error handling when financial data is unavailable | should read *"Financial data isn't available on this device."*, not crash |
-| ❌ Reading real transactions | needs the entitlement |
-| ❌ Mapping, pagination, batching, balances | all downstream of the read |
-| ❌ Background refresh doing useful work | it'll run and find nothing |
-
-So this validates the whole app **except** the FinanceKit read — which is
-genuinely most of it, and worth doing now.
+The entitlement is live and provisioned, so the full test is available. Build
+with the **real** entitlements file — `Supporting/FinanceKitSync.entitlements`,
+which is what the project already uses. The unentitled variant exists only for
+signing without approval and reads nothing; do not use it here.
 
 ## Before you start
 
-1. **Plug the iPhone into the Mac** (or pair it for wireless debugging). As of
-   the last check no physical device was connected — only simulators.
-2. **Bring the phone onto the tailnet.** `box` currently serves
-   `https://$FKS_HOST:8443` **tailnet-only** (see
-   [Host names](workstream-server.md#host-names)), so the phone needs the
-   Tailscale app connected and joined to the tailnet.
-   Alternative: enable Funnel on 8443 — but read the warning in
-   `server/deploy.sh` first, because that port also serves an unrelated `/api`
-   route that would become public.
+1. **Plug the iPhone into the Mac**, or pair it for wireless debugging.
+2. **Bring the phone onto the tailnet.** `box` serves `https://$FKS_HOST:8443`
+   tailnet-only (see [Host names](workstream-server.md#host-names)), so the
+   phone needs the Tailscale app connected. Alternative: enable Funnel on 8443
+   — but read the warning in `server/deploy.sh` first, because that port also
+   serves an unrelated `/api` route that would become public.
+3. The account needs **real Apple Card, Apple Cash, or Apple Pay history**. A
+   device with none is a valid test of "zero transactions is not an error", but
+   it proves nothing about the read itself.
 
 ## Build and install
 
@@ -39,45 +30,57 @@ genuinely most of it, and worth doing now.
 cd app
 xcodebuild -project FinanceKitSync.xcodeproj -scheme FinanceKitSync \
   -destination 'platform=iOS,name=<your iPhone>' \
-  -configuration Debug -allowProvisioningUpdates \
-  CODE_SIGN_ENTITLEMENTS=Supporting/FinanceKitSync-Unentitled.entitlements \
-  build
+  -configuration Debug -allowProvisioningUpdates build
 ```
 
-Or from Xcode: select the device, then set **Build Settings → Code Signing
-Entitlements** to `Supporting/FinanceKitSync-Unentitled.entitlements` for the
-Debug configuration and hit Run.
+Or select the device in Xcode and hit Run. Note the local Xcode is a 27 beta:
+fine for a development build, **never** for anything submitted — see
+[`releasing.md`](./releasing.md).
 
-> Remember to put it back to `Supporting/FinanceKitSync.entitlements` once the
-> entitlement is approved. A build signed with the unentitled file silently
-> reads nothing.
+## Part 1 — the permission, first and above all
 
-## Test script
+This is the part that has never been proven, and the part that was broken.
+
+1. **Fresh install, walk onboarding to step 3, tap Continue.**
+   → iOS must present the **financial data consent prompt**. If no prompt
+   appears, stop: that is the build-19 bug returning, and the app will now say
+   so on screen instead of silently continuing.
+2. **Grant access.** → Onboarding completes to Home.
+3. **Settings › Privacy & Security › Financial Data** → **FinanceKit Sync must
+   be listed.** Its absence is the exact symptom that exposed the original bug.
+4. **Revoke access there, return to the app, tap Sync now.** → a clean,
+   user-visible error, not a crash and not a silent success.
+5. **Re-grant, relaunch.** → sync proceeds.
+
+## Part 2 — the app around it
 
 Server URL: `https://$FKS_HOST:8443`
 Token: `ssh box "grep '^FKS_TOKEN=' /opt/financekitsync/.env | cut -d= -f2-"`
 
-1. **Fresh install** → onboarding step 1 renders, Continue advances.
-2. **Enter a bad URL** (`http://example.com`) → footer flags it as not valid
+1. **Enter a bad URL** (`http://example.com`) → footer flags it as not valid
    https, Continue stays disabled.
-3. **Enter the real URL with a wrong token** → Test connection reports
-   *"The server refused the token."*
+2. **Real URL, wrong token** → *"The server refused the token."*
    *(This is the two-step check working — `/health` alone would have said OK.)*
-4. **Enter the real URL and correct token** → *"Connected"*.
-5. **Turn Tailscale off on the phone, retest** → *"Couldn't reach the server…"*.
-6. **Turn it back on, continue** → permission step, then Home.
-7. **Tap Sync now** → expect *"Financial data isn't available on this device."*
-   Not a crash, not a hang.
-8. **Activity log** → shows the run and the error; Export opens a share sheet.
-9. **Settings → change the server URL** → confirm it warns/clears the ledger.
-10. **Force-quit and relaunch** → goes straight to Home, config persisted
-    (proves the Keychain write works on real hardware, which is exactly what
-    silently failed in the unsigned test host).
+3. **Real URL, correct token** → *"Connected"*.
+4. **Turn Tailscale off on the phone, retest** → *"Couldn't reach the server…"*.
+5. **Activity log** → shows the run; Export opens a share sheet.
+6. **Settings → change the server URL** → confirm it warns/clears the ledger.
+7. **Force-quit and relaunch** → straight to Home, config persisted. (Proves the
+   Keychain write works on real hardware — exactly what failed silently in the
+   unsigned test host.)
+
+## Part 3 — the read itself
+
+The eleven items that have never been exercised, listed in
+[`workstream-app.md`](./workstream-app.md): the read, the FinanceKit→packet
+mapping against real data, pagination past 1000 rows, batching, corrections
+re-queueing, balances, revocation handling, and background refresh.
+
+Check the server actually received what the app claims it sent:
+
+```bash
+ssh box "sqlite3 /opt/financekitsync/data/financekitsync.db \
+  'select count(*) from transactions; select count(*) from accounts;'"
+```
 
 Anything unexpected, grab the Activity log export.
-
-## After the entitlement lands
-
-Re-sign with the real entitlements file and work through the device-only list in
-[`workstream-app.md`](./workstream-app.md) — the read, the mapping, pagination
-over >1000 rows, batching, corrections re-queueing, and background refresh.

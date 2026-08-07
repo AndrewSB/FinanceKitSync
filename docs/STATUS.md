@@ -2,7 +2,7 @@
 
 Single source of truth for where the project stands.
 
-**Last updated:** 2026-08-06
+**Last updated:** 2026-08-07
 **State:** 🟡 **Resubmitted with the fix.** Version 1.0 (**build 25**) is
 `WAITING_FOR_REVIEW` as of 2026-08-07 02:55 UTC, submission
 `f3daf509-6a74-4f57-8ffe-d93c2328b545`. It carries the
@@ -13,7 +13,7 @@ exercise FinanceKit at all, which is exactly how the bug below reached review.
 
 ---
 
-# 🔴 Build 19 cannot request the Wallet permission
+# ✅ Fixed — build 19 could not request the Wallet permission
 
 `Info.plist` declared **`NSFinancialDataDescription`**. The key iOS reads is
 **`NSFinancialDataUsageDescription`** — the only spelling anywhere in the iOS
@@ -26,6 +26,13 @@ list.
 Everything else was right the whole time — the entitlement, the capability on
 the App ID, the profile, and both `requestAuthorization()` call sites. One
 misspelled key made all of it moot.
+
+**Where the typo came from:** both drafts in
+[`archive/entitlement-request-text.md`](./archive/entitlement-request-text.md),
+written 2026-08-04, state *"NSFinancialDataDescription is set in Info.plist."*
+The wrong name was in this repo before the plist was ever written, and it was
+told to Apple in the entitlement request itself. Nothing downstream could catch
+it, because nothing downstream reads that key except iOS on a real device.
 
 **Why it survived provisioning, upload, and submission:** onboarding called
 `_ = try? await FinanceStore.shared.requestAuthorization()`, discarding the
@@ -89,23 +96,27 @@ Verified end to end on 2026-08-06 — the signed binary carries:
 | App record | `6797988167`, version 1.0, `WAITING_FOR_REVIEW` |
 | Listing metadata | ✅ complete |
 | Privacy / support / marketing URLs | ✅ set and serving |
-| Build in review | ✅ **19**, from Xcode Cloud `Release` on Xcode 26.6 GM. (Build 1, from the local Xcode 27 beta, is superseded and not submittable) |
-| Screenshot sets | ✅ **2** (6.9" and 6.5"), 5 images each, all `COMPLETE` |
+| Build in review | ✅ **25**, from Xcode Cloud `Release` on Xcode 26.6 GM. (Builds 1 and 19 are superseded — 1 was built with the local Xcode 27 beta, 19 could not request the Wallet permission) |
+| Screenshot sets | ✅ **2**, 5 images each, all `COMPLETE` |
 | Privacy nutrition labels | ✅ done by Andrew in the web UI (no API exists) |
 | Throwaway review server | ➖ **not provided, by decision** — see below |
 | Device verification | 🔴 **still unproven** |
-| Submission record | ✅ `de454c50-…`, `WAITING_FOR_REVIEW` |
+| Submission record | ✅ `f3daf509-…`, `WAITING_FOR_REVIEW` |
 
-## Submitted 2026-08-06
+## Submitted 2026-08-06, resubmitted 2026-08-07
 
-Review submission `de454c50-0392-4785-936e-ad3163928536`, `WAITING_FOR_REVIEW`.
+Current submission `f3daf509-6a74-4f57-8ffe-d93c2328b545`, carrying build 25.
+It replaced `de454c50-…` (build 19), which was cancelled once that build turned
+out to be unable to request the Wallet permission at all.
 
-Submitted deliberately ahead of the device test, on Andrew's call: queue
-position is worth more than certainty, and a rejection can be answered with a
-new build. What that trades away is real — see the two risks below.
+The original was submitted deliberately ahead of the device test, on Andrew's
+call: queue position is worth more than certainty, and a rejection can be
+answered with a new build. That trade did not pay off — the bug reached review,
+was caught by Andrew rather than by a test, and replacing the build cost the
+queue position anyway. The device test is *still* unrun.
 
-Three things were set during submission that had never been set before, and each
-is an assertion in Andrew's name worth knowing about:
+Three things were set during the first submission that had never been set
+before, and each is an assertion in Andrew's name worth knowing about:
 
 - **Price: Free**, base territory USA, all territories.
 - **Age rating: every question answered "no."** No violence, gambling, contests,
@@ -152,11 +163,6 @@ enabled on `:8443` — read the warning in `server/deploy.sh` first.
 
 ### Also still open
 
-- **Account type — resolved in practice.** This file used to rate an Individual
-  account as the single biggest risk to the request. Apple approved it anyway,
-  on `A29347X2JZ`, which is Individual. The organization requirement in the
-  FinanceKit API docs is evidently not enforced at request time. No conversion
-  needed; the draft support enquiry below is retained only as history.
 - **Server exposure.** Deployed but tailnet-only. Funnel is per-port and `:8443`
   also serves an unrelated `/api` route — see `server/deploy.sh`. Now also
   blocking the review server, above.
@@ -186,8 +192,8 @@ enabled on `:8443` — read the warning in `server/deploy.sh` first.
 | A | [iOS app](./workstream-app.md) | Claude | 🟡 signs with the real entitlement, 44 tests pass; **still unproven on device** | Device test |
 | B | [Server on `box`](./workstream-server.md) | Claude | 🟢 deployed, 13/13 protocol checks | — (exposure decision open) |
 | C | [Landing / privacy / support](./workstream-landing.md) | Claude | 🟢 live on GitHub Pages | — (copy says old name) |
-| D | [Xcode Cloud](./xcode-cloud.md) | Claude | 🟢 connected since 2026-08-04; `Default` + `Release` workflows, both pinned to Xcode 26.6 GM | — |
-| E | [App Store](./app-store.md) / [listing](./listing.md) | Andrew | 🟢 submitted 2026-08-06, `WAITING_FOR_REVIEW` | Apple |
+| D | [Xcode Cloud](./xcode-cloud.md) / [releasing](./releasing.md) | Claude | 🟡 connected since 2026-08-04; `Default`, `Release`, `Release Branch`, all on Xcode 26.6 GM | `Release Branch` env vars (manual, UI-only) |
+| E | [App Store](./app-store.md) / [listing](./listing.md) | Andrew | 🟢 build 25 `WAITING_FOR_REVIEW` since 2026-08-07 | Apple |
 
 ## Decisions made
 
@@ -219,144 +225,48 @@ enabled on `:8443` — read the warning in `server/deploy.sh` first.
 | `gh` token lacks `workflow` scope | Resolved | Pages deploys from a branch, no Actions workflow needed |
 | v0 `server/main.py` source lost | Resolved | Contract recovered from `.pyc` and archived in `docs/archive/`; v1 is a rewrite |
 
-## Entitlement request — filed
+## Entitlement — approved, for the record
 
 | | |
 |---|---|
-| Request ID | **`453VPT726K`** |
-| Filed | 2026-08-04 |
-| Version sent | **B** — the app as it stands, without financial management features |
+| Request ID | `453VPT726K`, filed 2026-08-04, **approved 2026-08-06** |
 | Bundle ID | `com.asb.FinanceKitSync` |
-| Team | `A29347X2JZ` — **Individual account** (confirmed by Andrew, 2026-08-04) |
+| Team | `A29347X2JZ` — an **Individual** account |
+| Version sent | **B** — the app as it stands, with no financial-management features |
 
-### Evidence from a known approval: LunchSync
+Two risks were rated high while this was pending, and **neither materialized**:
 
-<https://apps.apple.com/us/app/lunch-sync/id6739702427> — shipping, Finance
-category, FinanceKit entitlement approved.
+- **Account type.** Apple's FinanceKit API documentation says the entitlement
+  requires an organization-level account, and this file once called that "where
+  essentially all the remaining risk sits". It was approved on an Individual
+  account regardless. The requirement is not enforced at request time.
+- **Financial management tools.** Apple's published criteria ask for net worth,
+  spending trends, or budgeting; this app deliberately has none. Approved
+  anyway — consistent with LunchSync
+  (<https://apps.apple.com/us/app/lunch-sync/id6739702427>), a pure sync tool
+  that holds the same entitlement.
 
-| | |
-|---|---|
-| Seller | **LittleBlueBug Software, LLC** → an **Organization** account |
-| Category | Finance |
-| Description | *"A way to sync transactions from your Apple Card or other Wallet accounts to your Lunch Money account. Select one or more wallet accounts to sync. Pair each one with an Asset from your Lunch Money account. Set it and forget it!"* |
-| Financial management features | **None.** No net worth, balances, trends, or budgeting — all of that lives in Lunch Money, a separate app. |
+The plan to build an Accounts + Trends surface *in order to qualify* is
+withdrawn — those screens are worth building on product merit or not at all.
+The draft request text is archived in
+[`archive/entitlement-request-text.md`](./archive/entitlement-request-text.md);
+the Individual → Organization conversion research it prompted is dropped, since
+no conversion is needed.
 
-This cuts both ways, and it reverses part of the earlier assessment in this file:
-
-- **The financial-management-tools criterion is applied loosely.** A pure
-  sync/export tool with no analysis features holds this entitlement today. The
-  earlier conclusion here — that FinanceKitSync's product shape likely
-  disqualifies it — was **too pessimistic**, and the recommendation to build an
-  Accounts + Trends surface *in order to qualify* is withdrawn. Those screens
-  are still worth building on product merit, but they are not the gate.
-- **The organization requirement looks more real, not less.** The single
-  approval we can observe belongs to an LLC. That's one data point, not proof,
-  but it points the same way as Apple's API documentation.
-
-Net: risk has shifted almost entirely onto the **account type**.
-
-### Two independent rejection risks
-
-1. **Account type.** Apple's FinanceKit API documentation states you must *"hold
-   an organization-level Apple Developer account, be logged in as Account
-   Holder."* This account is Individual.
-
-   Note the sources conflict: <https://developer.apple.com/financekit/>, fetched
-   directly, lists only two eligibility bullets (Finance category, financial
-   management tools) and says requests "may be submitted by an Account Holder",
-   with **no** account-type restriction. The organization requirement appears in
-   the API documentation rather than the eligibility list. Unresolved from
-   outside Apple.
-
-2. **Financial management tools.** Covered below — the app doesn't provide them.
-
-### Converting Individual → Organization
-
-Apple supports converting an existing membership rather than enrolling a second
-one. Confirmed 2026-08-04:
-
-| | |
-|---|---|
-| Cost | **No separate conversion fee.** The membership is $99/year for both Individual and Organization — you are not charged twice. |
-| Caveat | Apple doesn't refund the unused portion of the current Individual year. So the real cost is $0 extra, not $200. |
-| Requirements | Submit a request to Apple; be the organization's **founder or co-founder**; supply the **D-U-N-S number** |
-| Andrew's status | D-U-N-S number **already in hand** |
-
-The open question is whether conversion **preserves Team ID `A29347X2JZ`**. If it
-does, nothing built so far moves: the bundle ID, the App Store Connect record
-(created 2026-08-04), and possibly the pending entitlement request all carry
-over. If instead Apple requires a fresh enrolment, the bundle ID and app record
-have to be transferred. Ask explicitly — it's the difference between zero
-rework and a migration.
-
-### Next action: ask Apple directly
-
-Contact Apple Developer Support. Draft:
-
-> My FinanceKit entitlement request `453VPT726K` (Team ID `A29347X2JZ`, bundle
-> ID `com.asb.FinanceKitSync`) is currently filed under an Individual account.
->
-> 1. Does the FinanceKit entitlement require an organization-level membership?
-> 2. If so, I would like to convert my existing Individual membership to an
->    Organization membership. I have a D-U-N-S number and am the founder of the
->    entity. What do you need from me?
-> 3. Does that conversion preserve my Team ID, bundle identifiers, and existing
->    App Store Connect app records — or will they need to be transferred?
-> 4. Will request `453VPT726K` remain valid through the conversion, or should I
->    re-file it afterwards?
-
-Questions 3 and 4 are the ones that decide how much rework there is. Free,
-authoritative, a day or two.
-
-> **App Store Connect record: created 2026-08-04** under `A29347X2JZ`. If
-> conversion preserves the Team ID this needs no action; otherwise it gets
-> transferred. Andrew has confirmed he's fine either way.
->
-> Note: the App Store Connect API does **not** expose app-record creation, so
-> that first step is manual regardless (tools like `fastlane produce` drive the
-> web session with an Apple ID and password). Everything after the record
-> exists — metadata, versions, TestFlight, builds — is API-automatable.
-
-Version B was submitted knowingly, with the qualification risk below understood.
-If Apple comes back citing the financial-management-tools criterion, the fix is
-already scoped — see [`app-store.md`](./app-store.md) §0 — and Version A of the
-explanation text in [`entitlement-request-text.md`](./entitlement-request-text.md)
-is ready for a resubmit.
-
-**Hedge while waiting:** build the Accounts + Trends surface anyway. It's needed
-for App Review regardless of how this request lands, and having it done turns a
-rejection into a same-day resubmit instead of a restart.
-
-## Qualification risk — assessed, mostly retired
-
-Apple's published criteria require the app to *"provide financial management
-tools (for example, a comprehensive view of net worth, spending trends,
-budgeting)"*, which this app deliberately does not do. That looked like a hard
-disqualifier, and this file previously recommended building an Accounts +
-spending-trends surface in order to qualify.
-
-**That recommendation was withdrawn.** LunchSync
-(<https://apps.apple.com/us/app/lunch-sync/id6739702427>) holds this entitlement
-while describing itself purely as a sync tool with no analysis features at all.
-So the criterion is applied loosely, and this app's shape is not the problem it
-appeared to be. Those screens remain worth building on product merit — not to
-satisfy Apple.
-
-What the same evidence *did* strengthen: LunchSync's seller is **LittleBlueBug
-Software, LLC**, an Organization account. Combined with Apple's FinanceKit API
-documentation requiring organization-level membership, the account-type question
-is now where essentially all the remaining risk sits.
+**The lesson worth keeping:** approval and provisioning are two separate steps.
+Being granted the entitlement does not enable the capability on the App ID, and
+automatic signing will keep minting profiles without it, failing with the same
+error indefinitely. See the top of this file.
 
 ## Waiting on Andrew
 
-Only one thing is worth doing while parked:
-
-**Ask Apple Developer Support about the account type.** Free, a day or two, and
-it could invalidate `453VPT726K` — better to learn that now than after a
-multi-week wait. Draft is above under *"Entitlement request — filed"*.
-
-Everything else is either done or gated on Apple. See
-*"Resume here when the entitlement is approved"* at the top of this file.
+1. **Run the device test.** The only thing standing between a green pipeline
+   and a shipped app that may not work. See
+   [`device-test.md`](./device-test.md).
+2. **Add the environment variables to the `Release Branch` workflow** —
+   `FKS_AUTO_SUBMIT`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, and the secret `ASC_KEY`.
+   They cannot be set through the API. Until then that workflow archives and
+   uploads but never submits. See [`releasing.md`](./releasing.md).
 
 ## Log
 
@@ -501,3 +411,24 @@ Everything else is either done or gated on Apple. See
   retroactively**, because the signal it depends on
   (`AppTransaction.originalAppVersion`) has to be read on the first launch of
   the paywalled build.
+- **2026-08-07** — **The Wallet permission never worked.** Andrew noticed the
+  app was absent from Settings › Privacy & Security › Financial Data, which is
+  only possible if it never asked. `Info.plist` had
+  `NSFinancialDataDescription`; iOS reads `NSFinancialDataUsageDescription`. Two
+  things let a one-word typo reach App Review: nothing had ever run on a device,
+  and onboarding discarded the authorization result with `try?`, so "never
+  granted" and "granted" looked identical from inside the app. Both fixed.
+- **2026-08-07** — **Resubmitted as build 25.** `Release` triggered via
+  `POST /v1/ciBuildRuns` (~5 minutes to archive), then
+  `tools/submit_for_review.py` cancelled `de454c50-…` and submitted
+  `f3daf509-…`. A queued submission cannot have its build swapped, so replacing
+  one always costs its place in the queue. Also measured: cancellation is
+  asynchronous, and attaching a build before the version leaves
+  `WAITING_FOR_REVIEW` fails `409 INVALID_STATE`.
+- **2026-08-07** — **`Release Branch` workflow created** — push to `release/*`
+  archives, uploads, and submits for review. Xcode Cloud cannot submit for
+  review itself; `ci_post_xcodebuild.sh` calls the same script used above.
+  Environment variables **cannot** be set through the API
+  (`environmentVariables` is not a writable attribute on `ciWorkflows`), so the
+  workflow ships inert until four variables are added by hand. Everything about
+  releasing now lives in [`releasing.md`](./releasing.md).

@@ -1,5 +1,16 @@
 # Archive
 
+Superseded material, kept for provenance. Nothing here describes the current
+state of the project — see [`../STATUS.md`](../STATUS.md) for that.
+
+## `entitlement-request-text.md`
+
+The drafts written for the FinanceKit entitlement request, filed 2026-08-04 as
+`453VPT726K` and approved 2026-08-06. Archived because the request is granted
+and cannot be re-filed. Worth reading for one reason: both drafts name the
+Info.plist key as `NSFinancialDataDescription`, which does not exist — the
+earliest appearance of the typo that later shipped in build 19.
+
 ## `v0-server-main.cpython-314.pyc`
 
 The only surviving artifact of the original mirror server.

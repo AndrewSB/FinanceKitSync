@@ -4,17 +4,16 @@ Click-by-click for creating the app record and listing. Everything here needs
 your Apple account, so it's yours to do — but every value you'll be asked for is
 written out below, so it should be copy-and-paste rather than decision-making.
 
-> ## ⛔ Do not start this yet — 2026-08-04
+> ## ✅ Done — kept as a record
 >
-> The account (`A29347X2JZ`) is confirmed **Individual**, and Apple's FinanceKit
-> API documentation says the entitlement requires an **organization-level**
-> account. Until Apple Developer Support confirms the path (see
-> [`STATUS.md`](./STATUS.md)), creating the app record here may be wasted work:
-> if a new organization enrolment is required, that's a different Team ID and
-> this record would need transferring or recreating.
+> The app record (`6797988167`) was created 2026-08-04 and the listing applied
+> from `tools/listing.json`; version 1.0 is in review. Follow this only to
+> recreate a record from scratch.
 >
-> Everything below stays accurate — just don't run it until the account question
-> is settled.
+> This section used to say **do not start yet**, on the theory that the
+> entitlement needed an organization-level account and a new enrolment would
+> mean a different Team ID. That never happened — Apple approved the entitlement
+> on the Individual account `A29347X2JZ`.
 
 ---
 

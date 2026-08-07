@@ -4,47 +4,38 @@ Everything to fill in the App Store Connect record. Copy as-is.
 
 ---
 
-## ⚠️ The name must change
+## The name — decided, with the risk accepted
 
-Apple's [trademark guidelines](https://www.apple.com/legal/intellectual-property/guidelinesfor3rdparties.html)
-state you may not use or register, **in whole or in part**, an Apple trademark
-as part of a product name. `FinanceKit` is an Apple framework name and therefore
-an Apple trademark, so **"FinanceKit Sync" cannot be the App Store display
-name.**
+The App Store display name is **"FinanceKit Sync"**, and 1.0 is in review under
+it.
 
-What is allowed is *referential* use — "for", "for use with", "compatible
-with" — where the Apple mark is less prominent and implies no endorsement.
-That's how LunchSync ships as **"Lunch Sync"** while saying "Apple Card"
-throughout its description. Same approach here.
+This section previously said the name *must* change. The reasoning: Apple's
+[trademark guidelines](https://www.apple.com/legal/intellectual-property/guidelinesfor3rdparties.html)
+say you may not use an Apple trademark, in whole or in part, in a product name,
+and `FinanceKit` is an Apple framework name. Alternatives were drafted —
+*Ledgerline*, *Cardpost*, *Ownledger*, *Tallyport*, *Passage*.
 
-**Unaffected:** the bundle ID `com.asb.FinanceKitSync`, the Xcode project, and
-the repo name. None are user-facing branding, and LunchSync's own
-`com.littlebluebug.AppleCardSync` is precedent that bundle IDs aren't policed
-this way. Only the display name changes.
+The decision on 2026-08-04 was to keep "FinanceKit Sync" anyway: "FinanceKit" is
+absent from Apple's published trademark list while every sibling framework is
+registered, and the downside is a metadata rejection that is fixable the same
+day without a new binary. That bet has not yet been settled — the app is in
+review, not approved.
 
-### Name candidates
-
-Limit is 30 characters. Check availability in App Store Connect — it'll reject a
-name already claimed.
-
-| Name | Why |
-|---|---|
-| **Ledgerline** ⭐ | Recommended. Sounds like a finance product, no trademark surface, short, and leaves room to grow beyond Apple-only sources. |
-| **Cardpost** | Evokes "posting" transactions somewhere. Snappy. |
-| **Ownledger** | States the thesis — your ledger, your server. Slightly on the nose. |
-| **Tallyport** | "Port" as in portability. Distinctive, less obvious. |
-| **Passage** | Clean, understated; weaker at conveying finance. |
-
-The rest of this file uses **Ledgerline**. Search and replace if you pick
-another.
+**If Apple objects, the fix is small:** change the name in `tools/listing.json`
+and re-apply with `tools/push_listing.py`. The bundle ID, repo, and binary are
+unaffected.
 
 ---
+
+> **`tools/listing.json` is the source of truth for the listing**, not this
+> file. It is what gets pushed to App Store Connect and what has actually been
+> applied. Treat the values below as the human-readable rationale.
 
 ## App Information
 
 | Field | Value |
 |---|---|
-| Name | `Ledgerline` |
+| Name | `FinanceKit Sync` |
 | Subtitle | `Your transactions, your server` *(29 chars)* |
 | Primary category | **Finance** ← required by the FinanceKit criteria |
 | Secondary category | Utilities |
@@ -62,7 +53,7 @@ another.
 
 ```
 Your Apple Card, Apple Cash, and Apple Pay transactions belong to you.
-Ledgerline puts them somewhere you can actually use them.
+FinanceKit Sync puts them somewhere you can actually use them.
 
 Point it at a server you run, and it copies your transaction history there —
 your full history, not just the last month — and keeps it current as new
@@ -84,7 +75,7 @@ Only a record of what has already been delivered — an identifier and a checksu
 per transaction. No amounts. No merchant names.
 
 YOU NEED YOUR OWN SERVER
-Ledgerline does not come with one, and there is no hosted option. The setup
+FinanceKit Sync does not come with one, and there is no hosted option. The setup
 guide covers running the open-source receiver on any machine you control. If
 you would rather not run a server, this app is not for you.
 
