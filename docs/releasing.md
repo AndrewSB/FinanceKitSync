@@ -77,12 +77,13 @@ repo).
 
 - **Environment variables cannot be set through the API.**
   `environmentVariables` is not a writable attribute on `ciWorkflows` — the
-  request is rejected outright. The four variables `Release Branch` needs must
-  be added by hand, once, in App Store Connect → Xcode Cloud → Manage Workflows
-  → Release Branch → Environment: `FKS_AUTO_SUBMIT=1`, `ASC_KEY_ID`,
-  `ASC_ISSUER_ID`, and `ASC_KEY` (the **contents** of the `.p8`, marked
-  **secret**). Until they exist the workflow archives and uploads but skips
-  submission, saying so in the log — inert, not broken.
+  request is rejected outright. The four variables `Release Branch` needs are
+  entered by hand in App Store Connect → Xcode Cloud → Manage Workflows →
+  Release Branch → Environment. `FKS_AUTO_SUBMIT=1`, `ASC_KEY_ID` and
+  `ASC_ISSUER_ID` were set on 2026-08-07; **`ASC_KEY` (the contents of the
+  `.p8`, marked secret) is still missing**, and until it exists the workflow
+  archives and uploads but skips submission, saying so in the log — inert, not
+  broken.
 - **Xcode Cloud cannot submit for review at all.** Its Archive action stops at
   uploading; the review submission is App Store Connect API only. That is the
   entire reason `tools/submit_for_review.py` exists.
