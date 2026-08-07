@@ -246,10 +246,15 @@ def main() -> None:
             "--replace-queued to cancel it and submit a new one, knowing that "
             "forfeits its review queue position."
         )
+    # Wait for the build BEFORE cancelling anything. The gate above already
+    # failed fast if the queue is occupied, so the only thing left is to hold
+    # the existing submission's place until there is something to replace it
+    # with — a build that never processes should leave the queue untouched.
+    build = wait_for_build(app_id, args.build, args.timeout)
+
     for submission in queued:
         cancel(submission, args.dry_run)
 
-    build = wait_for_build(app_id, args.build, args.timeout)
     attach_build(version_id, build["id"], args.dry_run)
     submit(app_id, version_id, args.dry_run)
 
