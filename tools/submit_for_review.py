@@ -138,6 +138,39 @@ def cancel(submission: dict, dry_run: bool) -> None:
     )
 
 
+def wait_until_editable(version_id: str, dry_run: bool, timeout_s: int = 300) -> None:
+    """Block until the version will accept a new build.
+
+    MEASURED, 2026-08-06: cancelling a submission returns 200 immediately, but
+    the version stays in WAITING_FOR_REVIEW for a few seconds afterwards while
+    Apple settles it into DEVELOPER_REJECTED. Attaching during that window
+    fails with:
+
+        409 ENTITY_ERROR.RELATIONSHIP.INVALID.INVALID_STATE
+        "The specified pre-release build could not be added."
+
+    Unattended, that is the worst possible outcome — the old submission is
+    already cancelled, so the run would leave nothing queued at all.
+    """
+    if dry_run:
+        return
+
+    deadline = time.time() + timeout_s
+    while True:
+        state = asc.get(f"/v1/appStoreVersions/{version_id}")["data"]["attributes"].get(
+            "appStoreState"
+        )
+        if state not in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE"):
+            return
+        if time.time() > deadline:
+            raise SystemExit(
+                f"version stuck in {state} after {timeout_s}s; not submitted. "
+                "Re-run this script — it picks up from here."
+            )
+        print(f"version is {state}; waiting for it to become editable…")
+        time.sleep(10)
+
+
 def attach_build(version_id: str, build_id: str, dry_run: bool) -> None:
     print(f"attaching build {build_id} to version {version_id}")
     if dry_run:
@@ -255,6 +288,7 @@ def main() -> None:
     for submission in queued:
         cancel(submission, args.dry_run)
 
+    wait_until_editable(version_id, args.dry_run)
     attach_build(version_id, build["id"], args.dry_run)
     submit(app_id, version_id, args.dry_run)
 

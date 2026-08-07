@@ -3,10 +3,13 @@
 Single source of truth for where the project stands.
 
 **Last updated:** 2026-08-06
-**State:** 🔴 **The queued build is broken.** Version 1.0 (build 19) is
-`WAITING_FOR_REVIEW` as of 2026-08-06 15:14 UTC, and it can never read
-financial data — see below. A fix is on `main`; a replacement build has not
-been produced yet. The device test is still unrun.
+**State:** 🟡 **Resubmitted with the fix.** Version 1.0 (**build 25**) is
+`WAITING_FOR_REVIEW` as of 2026-08-07 02:55 UTC, submission
+`f3daf509-6a74-4f57-8ffe-d93c2328b545`. It carries the
+`NSFinancialDataUsageDescription` fix. The build-19 submission
+(`de454c50-…`) was cancelled to make room for it. **The device test is still
+unrun** — build 25 has never executed on hardware, and a simulator cannot
+exercise FinanceKit at all, which is exactly how the bug below reached review.
 
 ---
 
@@ -35,12 +38,26 @@ the built `Info.plist`, tests pass 44/44. **Not** verified on a real device —
 which is the check that would have caught this in thirty seconds, and is still
 listed as unproven below.
 
-## What has to happen to build 19
+## How build 19 was replaced — done 2026-08-07
 
-Its submission cannot have the build swapped — Apple freezes a queued
-submission — so shipping the fix means cancelling `de454c50-…` and submitting a
-new build, forfeiting its place in the review queue. See
-[`xcode-cloud.md`](./xcode-cloud.md) for the automated path and its caveats.
+Its submission could not have the build swapped (Apple freezes a queued
+submission), so the fix meant cancelling `de454c50-…` and submitting fresh,
+forfeiting that queue position. Done via the API:
+
+1. `POST /v1/ciBuildRuns` triggered the `Release` workflow on `main` — run 25,
+   `SUCCEEDED` in ~5 minutes, uploading **build 25**. (Build numbers come from
+   `$CI_BUILD_NUMBER`, the per-workflow run counter, hence 25 rather than 20.)
+2. `tools/submit_for_review.py --build 25 --replace-queued` cancelled the old
+   submission, attached build 25, and submitted `f3daf509-…`.
+
+**MEASURED, and the reason that script grew a wait loop:** cancelling returns
+200 immediately, but the version sits in `WAITING_FOR_REVIEW` for a few seconds
+before settling into `DEVELOPER_REJECTED`, and attaching during that window
+fails `409 INVALID_STATE`. It happened on the first run here. Re-running fixed
+it, but unattended that sequence would have cancelled the old submission and
+then left *nothing* queued — `ci_post_xcodebuild.sh` fails soft, so it would
+have exited green having dropped the release on the floor. The script now waits
+for the version to become editable before attaching.
 
 ---
 
