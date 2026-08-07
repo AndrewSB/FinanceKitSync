@@ -269,11 +269,12 @@ error indefinitely. See the top of this file.
 
 ## Waiting on Andrew
 
-1. **Add `ASC_KEY` to the `Release Branch` workflow** — the contents of the
-   `.p8`, marked secret. `FKS_AUTO_SUBMIT`, `ASC_KEY_ID` and `ASC_ISSUER_ID`
-   were set on 2026-08-07; this last one is a private key, so it has to be
-   pasted by hand. Until it exists that workflow archives and uploads but never
-   submits. See [`releasing.md`](./releasing.md).
+1. **Prove the `Release Branch` path end to end.** All four environment
+   variables are set as of 2026-08-07, but no `release/*` push has ever run, so
+   the auto-submit has never executed once. It fails soft, so a silent no-op is
+   the likely failure mode. **Wait until build 25 clears review** — the first
+   run passes `--replace-queued`, which cancels whatever is queued.
+   See [`releasing.md`](./releasing.md).
 2. **Wait on App Review**, and decide whether to work through the remaining
    itemised device checks in [`device-test.md`](./device-test.md) — the bulk
    sync paths that "it works" does not by itself cover.
@@ -443,11 +444,15 @@ error indefinitely. See the top of this file.
   workflow ships inert until four variables are added by hand. Everything about
   releasing now lives in [`releasing.md`](./releasing.md).
 - **2026-08-07** — Three of those four variables set through the App Store
-  Connect UI; only the secret `ASC_KEY` remains. Also removed a bogus start
-  condition from `Release Branch`: it was created matching both the `release/`
-  prefix **and** a literal branch named `release`, which does not exist, and
-  Apple flagged the workflow with a validation error until it was dropped. An
-  API create can produce a workflow the UI considers invalid.
+  Connect UI, and `ASC_KEY` shortly after — all four now set. Also removed a
+  bogus start condition from `Release Branch`: it was created matching both the
+  `release/` prefix **and** a literal branch named `release`, which does not
+  exist, and Apple flagged the workflow with a validation error until it was
+  dropped. An API create can produce a workflow the UI considers invalid.
+  Two UI traps cost a round trip and are worth remembering: **Add** only stages
+  an environment variable while the workflow's **Save** commits it, and ticking
+  *Keep value redacted* turns the field into a password input that Chrome
+  autofills a saved password into.
 - **2026-08-07** — **It works on a real iPhone.** Andrew ran build 25 on
   hardware and confirmed it: the permission prompt appears and the app
   functions. First time anything in this project has run on a device, closing

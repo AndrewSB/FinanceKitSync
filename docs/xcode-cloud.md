@@ -97,14 +97,14 @@ both came from here. It uploads but does not submit.
 | Start Condition | **Branch Changes** → `release/` (prefix) |
 | Environment | "Latest Release" — 17F113 / Xcode 26.6 GM, macOS 25G72. **Not** the 27 beta; Apple rejects beta-built submissions. |
 | Actions | **Archive**, scheme `FinanceKitSync`, `APP_STORE_ELIGIBLE` |
-| Environment Variables | `FKS_AUTO_SUBMIT`, `ASC_KEY_ID`, `ASC_ISSUER_ID` set 2026-08-07. ⚠️ **`ASC_KEY` still missing** |
+| Environment Variables | all four set 2026-08-07 |
 
 This is the hands-off path: push to a `release/*` branch and the build reaches
 App Store review with no clicks. The archive is Xcode Cloud's part;
 `ci_scripts/ci_post_xcodebuild.sh` does the rest by calling
 [`tools/submit_for_review.py`](../tools/submit_for_review.py).
 
-> **⚠️ `ASC_KEY` is still missing, and the workflow will not submit without it.**
+> **All four are set as of 2026-08-07 — but the path has never run.**
 > Environment variables **cannot be set through the App Store Connect API** —
 > `environmentVariables` is not a writable attribute on `ciWorkflows`, and the
 > request is rejected as an unknown attribute. They have to be entered in
@@ -113,10 +113,19 @@ App Store review with no clicks. The archive is Xcode Cloud's part;
 >
 > | Key | Value | Secret | |
 > |---|---|---|---|
-> | `FKS_AUTO_SUBMIT` | `1` | no | ✅ set 2026-08-07 |
-> | `ASC_KEY_ID` | the key ID | no | ✅ set 2026-08-07 |
-> | `ASC_ISSUER_ID` | the issuer ID | no | ✅ set 2026-08-07 |
-> | `ASC_KEY` | the **contents** of the `.p8` file | **yes** | 🔴 **not set** |
+> | `FKS_AUTO_SUBMIT` | `1` | no | ✅ |
+> | `ASC_KEY_ID` | the key ID | no | ✅ |
+> | `ASC_ISSUER_ID` | the issuer ID | no | ✅ |
+> | `ASC_KEY` | the **contents** of the `.p8` file | **yes** | ✅ |
+>
+> ⚠️ **Two traps when entering these, both hit for real on 2026-08-07.**
+> First, **Add only stages the variable — the workflow's Save button commits
+> it.** A variable added and not saved vanishes silently, and the list looks
+> identical until you reload. Second, ticking *Keep value redacted* turns Value
+> into a password field, and **Chrome will autofill a saved password into it**.
+> Type the name and paste the value first, tick Secret last, and check the field
+> still holds what you pasted. A redacted value cannot be read back, so a wrong
+> one is invisible until a build fails.
 >
 > Get the key onto the clipboard without opening it:
 > `pbcopy < ~/path/to/AuthKey_XXXXXXXXXX.p8`. Paste the whole file including the
