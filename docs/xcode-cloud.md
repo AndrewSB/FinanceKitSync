@@ -53,7 +53,7 @@ configuration needed. The scripts must stay executable — if that's ever lost,
 |---|---|
 | Product ID | `937ce9c4-6e56-43d2-aaf1-b3edaa9e8195`, created 2026-08-04 |
 | Repository | `AndrewSB/FinanceKitSync` via the `GITHUB_CLOUD` provider |
-| Workflows | `Default` (build on `main`) and `Release` (manual archive) |
+| Workflows | `Default` (build on `main`) and `Release` (manual archive). `Release Branch` below is **specified but not yet created** — it needs the UI or an Admin-role API key. |
 
 > **A wrong entry was here, and it's worth recording why.** On 2026-08-06 this
 > section was rewritten to say "Not connected", on the evidence that
@@ -122,6 +122,55 @@ your safety net on every PR.
 
 Start it from Xcode's Report navigator or from App Store Connect. This is the
 workflow that produces the build you submit.
+
+### 4. `Release Branch` — push to `release/*`, land in review
+
+| Setting | Value |
+|---|---|
+| Start Condition | **Branch Changes** → `release/*` |
+| Environment | Xcode 26.x (**not** the 27 beta — Apple rejects beta-built submissions) |
+| Actions | **Archive** (scheme `FinanceKitSync`, **Deployment Preparation: App Store Connect**) |
+| Environment Variables | `FKS_AUTO_SUBMIT=1`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY` (the `.p8` **contents**, marked secret) |
+
+This is the hands-off path: push to a `release/*` branch and the build reaches
+App Store review with no clicks. The archive is Xcode Cloud's part;
+`ci_scripts/ci_post_xcodebuild.sh` does the rest by calling
+[`tools/submit_for_review.py`](../tools/submit_for_review.py).
+
+## Why submission needs a script at all
+
+**Xcode Cloud cannot submit for review.** Its Archive action tops out at
+uploading a build and optionally distributing to TestFlight; creating the review
+submission is App Store Connect API only (`POST /v1/reviewSubmissions`, an item
+pointing at the version, then `PATCH … submitted: true`). Nothing in the
+workflow UI does this, which is why the last mile lives in the repo.
+
+Three things about that script are worth knowing before you rely on it:
+
+- **It forfeits queue position when it replaces a submission.** A submission in
+  `WAITING_FOR_REVIEW` cannot have its build swapped — Apple freezes it. So
+  "push a fix and it replaces the queued build" really means *cancel the old
+  submission, create a new one*, and go to the back of the line. Run by hand,
+  the script refuses to do this without `--replace-queued`; from CI that flag is
+  always passed, because otherwise a release push would silently do nothing.
+- **It waits, because an uploaded build is not immediately usable.** Processing
+  takes minutes to well over half an hour, and the script polls for up to 45
+  minutes. That wait happens *inside* the Xcode Cloud run, so a release build
+  occupies a compute slot far longer than a normal archive.
+- **It fails soft.** A failed submission never fails the build — the archive is
+  already uploaded and good. Re-run `tools/submit_for_review.py --build N`
+  locally to finish the job.
+
+- **Its build numbers come from a fresh counter.** `ci_pre_xcodebuild.sh` sets
+  the build number from `$CI_BUILD_NUMBER`, which Xcode Cloud increments *per
+  workflow*. Build 19 came from `Release`'s counter, so a new workflow starts
+  its own — and App Store Connect rejects a duplicate build number within a
+  version. Expect one collision on the first `Release Branch` archive, fixed by
+  bumping that workflow's build number once in App Store Connect.
+
+Every guard is opt-in and layered: not an archive action, `FKS_AUTO_SUBMIT`
+unset, not a `release/*` branch, or credentials missing — any one of those and
+the script does nothing but say so.
 
 ## Scripting these instead
 

@@ -3,8 +3,44 @@
 Single source of truth for where the project stands.
 
 **Last updated:** 2026-08-06
-**State:** 🟢 **Submitted.** Version 1.0 (build 19) is `WAITING_FOR_REVIEW` as
-of 2026-08-06 15:14 UTC. The device test is still unrun.
+**State:** 🔴 **The queued build is broken.** Version 1.0 (build 19) is
+`WAITING_FOR_REVIEW` as of 2026-08-06 15:14 UTC, and it can never read
+financial data — see below. A fix is on `main`; a replacement build has not
+been produced yet. The device test is still unrun.
+
+---
+
+# 🔴 Build 19 cannot request the Wallet permission
+
+`Info.plist` declared **`NSFinancialDataDescription`**. The key iOS reads is
+**`NSFinancialDataUsageDescription`** — the only spelling anywhere in the iOS
+27.0 SDK. With no recognized usage description iOS never shows the consent
+prompt, `requestAuthorization()` never returns `.authorized`, and the app never
+appears under Settings › Privacy & Security › Financial Data at all. Reported by
+Andrew on 2026-08-06 from exactly that symptom: the app was missing from the
+list.
+
+Everything else was right the whole time — the entitlement, the capability on
+the App ID, the profile, and both `requestAuthorization()` call sites. One
+misspelled key made all of it moot.
+
+**Why it survived provisioning, upload, and submission:** onboarding called
+`_ = try? await FinanceStore.shared.requestAuthorization()`, discarding the
+status *and* the error. A build that could never be granted access looked
+exactly like one that was. Fixed in `8168eec`, which now reports a
+non-`.authorized` status, links to Settings, and still lets the user continue.
+
+Both are on `main`. Verified: Release device build signs, the correct key is in
+the built `Info.plist`, tests pass 44/44. **Not** verified on a real device —
+which is the check that would have caught this in thirty seconds, and is still
+listed as unproven below.
+
+## What has to happen to build 19
+
+Its submission cannot have the build swapped — Apple freezes a queued
+submission — so shipping the fix means cancelling `de454c50-…` and submitting a
+new build, forfeiting its place in the review queue. See
+[`xcode-cloud.md`](./xcode-cloud.md) for the automated path and its caveats.
 
 ---
 
