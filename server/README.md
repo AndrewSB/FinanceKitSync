@@ -32,6 +32,13 @@ the address before a token is entered. It returns nothing useful to a scanner.
 There are no `/docs` or `/openapi.json` routes — this endpoint is on the public
 internet and shouldn't advertise itself.
 
+## Tailnet address
+
+`https://box.tail590aa.ts.net:8501` — Tailscale Serve, tailnet-only, on a port
+this service owns. It is deliberately not sharing :8443 with box-api and the
+web UI: a serve mount at `/` replaces whatever was there, so deploying here
+used to evict the web UI.
+
 ## Deploy to `box`
 
 See [`../docs/workstream-server.md`](../docs/workstream-server.md) for the full
