@@ -8,7 +8,7 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>NSFinancialDataDescription</key>
+	<key>NSFinancialDataUsageDescription</key>
 	<string>FinanceKitSync reads your transactions so it can copy them to the personal server address you configure. Your data is not sent anywhere else.</string>
 	<key>UIBackgroundModes</key>
 	<array>

@@ -10,6 +10,10 @@ import FinanceKit
 struct OnboardingView: View {
     let onComplete: () -> Void
 
+    /// Set when iOS declines (or never asks). Nil while things are going fine.
+    @State private var authIssue: String?
+    @State private var isRequesting = false
+
 #if DEBUG
     @State private var step = ScreenshotMode.onboardingStep
     @State private var urlText = ScreenshotMode.isActive
@@ -117,20 +121,64 @@ struct OnboardingView: View {
                 """)
                 .fixedSize(horizontal: false, vertical: true)
 
+            if let authIssue {
+                VStack(alignment: .leading, spacing: 12) {
+                    Label(authIssue, systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    if let settings = URL(string: UIApplication.openSettingsURLString) {
+                        Link("Open Settings", destination: settings)
+                    }
+                }
+            }
+
             Spacer()
 
-            Button("Continue") {
-                Task {
-                    // A denial isn't a dead end — the user lands on Home, which
-                    // surfaces the error and lets them retry.
-                    _ = try? await FinanceStore.shared.requestAuthorization()
-                    onComplete()
-                }
+            Button(isRequesting ? "Asking…" : "Continue") {
+                Task { await requestAccess() }
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .frame(maxWidth: .infinity)
+            .disabled(isRequesting)
+
+            if authIssue != nil {
+                // A denial isn't a dead end — Home surfaces the same error and
+                // lets them retry, so let them through rather than trapping them
+                // on this step.
+                Button("Continue without it", action: onComplete)
+                    .frame(maxWidth: .infinity)
+            }
         }
         .padding(28)
+    }
+
+    /// Asks for financial-data access and *reports* the answer. FinanceKit
+    /// returns a status rather than throwing when access isn't granted, and it
+    /// can decline without ever showing a prompt — an unavailable store, a
+    /// missing `NSFinancialDataUsageDescription`, or a prior denial all look
+    /// like a silent no. Discarding that made a broken build indistinguishable
+    /// from a working one, which is exactly how a misspelled usage-description
+    /// key shipped in 1.0.
+    private func requestAccess() async {
+        isRequesting = true
+        defer { isRequesting = false }
+
+        do {
+            let status = try await FinanceStore.shared.requestAuthorization()
+            guard status == .authorized else {
+                authIssue = """
+                    iOS didn't grant access to your financial data. If you saw no \
+                    prompt, access may already be turned off in Settings › Privacy \
+                    & Security › Financial Data.
+                    """
+                return
+            }
+            authIssue = nil
+            onComplete()
+        } catch {
+            authIssue = "The permission request failed: \(error.localizedDescription)"
+        }
     }
 }
