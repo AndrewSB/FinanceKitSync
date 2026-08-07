@@ -27,14 +27,13 @@ docs/      spec, workstream tracking, App Store material
 
 ## Status
 
-🟡 **In review.** The `com.apple.developer.financekit` entitlement was approved
-and provisioned on 2026-08-06, the app builds and passes 44 tests, and the
-server is deployed and verified. Version 1.0 (build 25) is waiting for App Store
-review. **No real transaction has ever been read** — the app has never run on a
-device, and the simulator cannot exercise FinanceKit.
+🟢 **Working, and in review.** The `com.apple.developer.financekit` entitlement
+was approved and provisioned on 2026-08-06, the app builds and passes 44 tests,
+and the server is deployed and verified. Confirmed working on a real iPhone on
+2026-08-07. Version 1.0 (build 25) is waiting for App Store review.
 
-**[docs/STATUS.md](docs/STATUS.md) is the single source of truth**, and starts
-with a step-by-step *"Resume here when the entitlement is approved"* runbook.
+**[docs/STATUS.md](docs/STATUS.md) is the single source of truth**, and opens
+with exactly where things stand and what is still owed.
 
 ## License
 

@@ -1,9 +1,11 @@
 # Device test
 
-**Nothing in this repo has ever run on an iPhone.** That is the single largest
-gap in the project, and it is not a theoretical one: build 19 reached App Review
-unable to request the Wallet permission at all, and thirty seconds on hardware
-would have caught it. The simulator cannot substitute — `isDataAvailable`
+**Run at last on 2026-08-07** — build 25 works on a real iPhone: the permission
+prompt appears and the app functions. Before that, nothing in this repo had ever
+run on hardware, and the cost was not theoretical: build 19 reached App Review
+unable to request the Wallet permission at all, and thirty seconds on a device
+would have caught it. The bulk-sync items in Part 3 are still worth working
+through individually. The simulator cannot substitute — `isDataAvailable`
 returns `true` there and the first real query **traps** inside FinanceKit, which
 is why `SyncEngine` refuses to touch it on simulator at all.
 

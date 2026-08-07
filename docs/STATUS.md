@@ -3,13 +3,18 @@
 Single source of truth for where the project stands.
 
 **Last updated:** 2026-08-07
-**State:** 🟡 **Resubmitted with the fix.** Version 1.0 (**build 25**) is
+**State:** 🟢 **Works on device, and in review.** Version 1.0 (**build 25**) is
 `WAITING_FOR_REVIEW` as of 2026-08-07 02:55 UTC, submission
-`f3daf509-6a74-4f57-8ffe-d93c2328b545`. It carries the
-`NSFinancialDataUsageDescription` fix. The build-19 submission
-(`de454c50-…`) was cancelled to make room for it. **The device test is still
-unrun** — build 25 has never executed on hardware, and a simulator cannot
-exercise FinanceKit at all, which is exactly how the bug below reached review.
+`f3daf509-6a74-4f57-8ffe-d93c2328b545`, carrying the
+`NSFinancialDataUsageDescription` fix. The build-19 submission (`de454c50-…`)
+was cancelled to make room for it.
+
+**Andrew confirmed the app working on a real iPhone on 2026-08-07** — the first
+time it has ever run on hardware. That closes the project's largest open
+question: the permission prompt appears and the app functions. The itemised
+checks in [`workstream-app.md`](./workstream-app.md) (pagination past 1000 rows,
+corrections re-queueing, background refresh) have not been individually
+confirmed and stay unticked.
 
 ---
 
@@ -41,9 +46,9 @@ exactly like one that was. Fixed in `8168eec`, which now reports a
 non-`.authorized` status, links to Settings, and still lets the user continue.
 
 Both are on `main`. Verified: Release device build signs, the correct key is in
-the built `Info.plist`, tests pass 44/44. **Not** verified on a real device —
-which is the check that would have caught this in thirty seconds, and is still
-listed as unproven below.
+the built `Info.plist`, tests pass 44/44 — and, on 2026-08-07, the fixed build
+confirmed working on a real iPhone. That last check is the one that would have
+caught this in thirty seconds, and it had never been run.
 
 ## How build 19 was replaced — done 2026-08-07
 
@@ -100,7 +105,7 @@ Verified end to end on 2026-08-06 — the signed binary carries:
 | Screenshot sets | ✅ **2**, 5 images each, all `COMPLETE` |
 | Privacy nutrition labels | ✅ done by Andrew in the web UI (no API exists) |
 | Throwaway review server | ➖ **not provided, by decision** — see below |
-| Device verification | 🔴 **still unproven** |
+| Device verification | ✅ **confirmed on hardware 2026-08-07** — permission prompt and app both work. Itemised sync checks not individually verified. |
 | Submission record | ✅ `f3daf509-…`, `WAITING_FOR_REVIEW` |
 
 ## Submitted 2026-08-06, resubmitted 2026-08-07
@@ -113,7 +118,8 @@ The original was submitted deliberately ahead of the device test, on Andrew's
 call: queue position is worth more than certainty, and a rejection can be
 answered with a new build. That trade did not pay off — the bug reached review,
 was caught by Andrew rather than by a test, and replacing the build cost the
-queue position anyway. The device test is *still* unrun.
+queue position anyway. The device test that would have caught it was run the
+following day, and passed.
 
 Three things were set during the first submission that had never been set
 before, and each is an assertion in Andrew's name worth knowing about:
@@ -146,20 +152,23 @@ behaviour rather than an error.
 https endpoint with synthetic data (scoped in [`app-store.md`](./app-store.md) §4),
 not a code change.
 
-## 🔴 Still the genuinely unproven half: the device
+## ✅ The device test — passed 2026-08-07
 
-[`workstream-app.md`](./workstream-app.md) → *"Not verified, and not verifiable
-without the entitlement."* Eleven items: the read itself, the FinanceKit→packet
-mapping against real data, pagination past 1000 rows, batching, corrections
-re-queueing, balances, revocation handling, background refresh.
+Andrew ran build 25 on a real iPhone and confirmed it works. This was the
+project's longest-standing gap: until this point nothing had ever run on
+hardware, and the whole premise — that the app can read real transactions — was
+unverified. A simulator cannot substitute, since `isDataAvailable` returns
+`true` there and the first real query traps inside FinanceKit.
 
-Nothing above changes this. A build that signs and uploads is not a build that
-has been shown to read a single real transaction. Full script in
-[`device-test.md`](./device-test.md).
+It is also what would have caught the build-19 bug in thirty seconds, and
+didn't, because it hadn't been run.
 
-Preconditions that will otherwise waste time: the phone must be **plugged in or
-paired**, and **on the tailnet** (`box` serves tailnet-only), or Funnel must be
-enabled on `:8443` — read the warning in `server/deploy.sh` first.
+**What remains unticked, and why:** the eleven itemised checks in
+[`workstream-app.md`](./workstream-app.md) — pagination past 1000 rows,
+batching, corrections re-queueing, balances, background refresh — were not
+individually confirmed. "It works" covers the permission prompt and a
+functioning app; it does not by itself prove a multi-thousand-row backfill
+resumes correctly. Script in [`device-test.md`](./device-test.md).
 
 ### Also still open
 
@@ -217,7 +226,7 @@ enabled on `:8443` — read the warning in `server/deploy.sh` first.
 |---|---|---|
 | **Individual account disqualifies the request** | Resolved | Did not materialize. Approved on `A29347X2JZ`, an Individual account, 2026-08-06 |
 | Entitlement denied or slow | Resolved | Approved and provisioned 2026-08-06. Note for next time: approval and provisioning are two separate steps, and the second one is manual |
-| **The app has never read a real transaction** | **High** — the entire premise is unverified, and it is now the only thing between a green pipeline and a shipped app that doesn't work | Run the device test. Eleven items in `workstream-app.md`; nothing else can substitute |
+| **The app has never read a real transaction** | Resolved 2026-08-07 | Confirmed working on hardware. It stayed open long enough to let a broken build reach App Review — the cost of deferring it was not hypothetical |
 | "FinanceKit" in the display name rejected | Low | Rename the listing; bundle ID, repo, and build all unaffected. Fixable same-day, no new binary |
 | Funnel port 8443 reclaimed, or its `/api` route exposed | Low–Medium | Funnel is per-port, not per-path. `deploy.sh` keeps it opt-in behind `FKS_ENABLE_FUNNEL=1` |
 | Tailnet hostname in public git history | Low | Requires tailnet membership to reach; Funnel off for that port. Revisit if Funnel is enabled on `:8443` |
@@ -260,13 +269,13 @@ error indefinitely. See the top of this file.
 
 ## Waiting on Andrew
 
-1. **Run the device test.** The only thing standing between a green pipeline
-   and a shipped app that may not work. See
-   [`device-test.md`](./device-test.md).
-2. **Add the environment variables to the `Release Branch` workflow** —
+1. **Add the environment variables to the `Release Branch` workflow** —
    `FKS_AUTO_SUBMIT`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, and the secret `ASC_KEY`.
    They cannot be set through the API. Until then that workflow archives and
    uploads but never submits. See [`releasing.md`](./releasing.md).
+2. **Wait on App Review**, and decide whether to work through the remaining
+   itemised device checks in [`device-test.md`](./device-test.md) — the bulk
+   sync paths that "it works" does not by itself cover.
 
 ## Log
 
@@ -432,3 +441,10 @@ error indefinitely. See the top of this file.
   (`environmentVariables` is not a writable attribute on `ciWorkflows`), so the
   workflow ships inert until four variables are added by hand. Everything about
   releasing now lives in [`releasing.md`](./releasing.md).
+- **2026-08-07** — **It works on a real iPhone.** Andrew ran build 25 on
+  hardware and confirmed it: the permission prompt appears and the app
+  functions. First time anything in this project has run on a device, closing
+  the gap that had been the top risk in this file since 2026-08-04 — and that
+  let a build which could not request the Wallet permission reach App Review.
+  The itemised bulk-sync checks (pagination, batching, corrections, background
+  refresh) remain individually unverified.

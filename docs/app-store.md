@@ -263,10 +263,11 @@ screenshot your own transaction history.
 - [x] Submit — build 25, submission `f3daf509-…`
 - [ ] **Throwaway review server running with synthetic data** — not done, by
       decision. See below; it is the most likely cause of a 2.1 rejection.
-- [ ] **Pass on a real device with real transactions** — 🔴 **never done.** The
-      one item on this list that has never been attempted, and the reason a
-      build that could not request the Wallet permission reached App Review.
-      See [`device-test.md`](./device-test.md).
+- [x] **Pass on a real device with real transactions** — 2026-08-07. Confirmed
+      by Andrew on hardware. It went unrun long enough to let a build that could
+      not request the Wallet permission reach App Review; the itemised bulk-sync
+      checks in [`device-test.md`](./device-test.md) are still worth working
+      through.
 
 ---
 

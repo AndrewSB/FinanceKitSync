@@ -101,17 +101,17 @@ tests exercise the *server*, with none of the Swift code in the loop.
       correction-updates-in-place, and the 401 path (`EndToEndTests`, opt-in via
       `TEST_RUNNER_FKS_TEST_URL` / `TEST_RUNNER_FKS_TEST_TOKEN`)
 
-### Not verified — nothing has ever run on a device
+### Partly verified — the app runs on hardware as of 2026-08-07
 
-Everything below needs a physical iPhone with real Apple Card / Apple Pay
-history. A simulator's FinanceKit store is permanently empty, so no amount of
-local testing substitutes.
+Andrew confirmed build 25 working on a real iPhone: the permission prompt
+appears and the app functions. Everything below still needs a physical device
+with real Apple Card / Apple Pay history to tick individually — a simulator's
+FinanceKit store is permanently empty, so no amount of local testing
+substitutes.
 
-**The entitlement stopped being the blocker on 2026-08-06.** The only thing
-between this list and being ticked is plugging in a phone. Leaving it unticked
-has already cost something real: build 19 shipped to App Review unable to
-request the Wallet permission at all, which the very first item here would have
-caught.
+Leaving this list unrun cost something real: build 19 shipped to App Review
+unable to request the Wallet permission at all, which the permission item below
+would have caught immediately.
 
 - [ ] Real transactions are read at all
 - [ ] The FinanceKit → packet mapping is correct against real data
@@ -126,10 +126,10 @@ caught.
 - [ ] Revoking access in iOS Settings produces a clear error, not a crash
 - [ ] Background refresh fires and completes
 
-Add one item ahead of all of these, because it is now known to be fallible:
+One item ahead of all of these, because it is now known to be fallible:
 
-- [ ] iOS actually presents the financial-data permission prompt, and the app
-      appears in Settings › Privacy & Security › Financial Data
+- [x] iOS actually presents the financial-data permission prompt — confirmed on
+      device 2026-08-07
 
 This list is the real definition of done for workstream A. Full script in
 [`device-test.md`](./device-test.md).
