@@ -22,15 +22,16 @@ docs/      spec, workstream tracking, App Store material
 
 - **[docs/SPEC.md](docs/SPEC.md)** — what this is, how it works, the threat model
 - **[docs/STATUS.md](docs/STATUS.md)** — where every workstream stands
+- **[docs/releasing.md](docs/releasing.md)** — how a build reaches the App Store
 - **[server/README.md](server/README.md)** — running the server
 
 ## Status
 
-⏸️ **Parked, waiting on Apple.** The app builds and passes 44 tests, the server
-is deployed and verified, and the App Store listing is complete — but the
-`com.apple.developer.financekit` entitlement (request `453VPT726K`) is pending,
-and without it the app **cannot be signed for a device at all**. So no build
-exists, and no real transaction has ever been read.
+🟡 **In review.** The `com.apple.developer.financekit` entitlement was approved
+and provisioned on 2026-08-06, the app builds and passes 44 tests, and the
+server is deployed and verified. Version 1.0 (build 25) is waiting for App Store
+review. **No real transaction has ever been read** — the app has never run on a
+device, and the simulator cannot exercise FinanceKit.
 
 **[docs/STATUS.md](docs/STATUS.md) is the single source of truth**, and starts
 with a step-by-step *"Resume here when the entitlement is approved"* runbook.

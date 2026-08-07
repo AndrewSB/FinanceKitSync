@@ -53,7 +53,7 @@ configuration needed. The scripts must stay executable — if that's ever lost,
 |---|---|
 | Product ID | `937ce9c4-6e56-43d2-aaf1-b3edaa9e8195`, created 2026-08-04 |
 | Repository | `AndrewSB/FinanceKitSync` via the `GITHUB_CLOUD` provider |
-| Workflows | `Default` (build on `main`) and `Release` (manual archive). `Release Branch` below is **specified but not yet created** — it needs the UI or an Admin-role API key. |
+| Workflows | `Default` (build on `main`), `Release` (manual archive), `Release Branch` (archive + auto-submit on `release/*`, created 2026-08-07). Day-to-day usage lives in [`releasing.md`](./releasing.md). |
 
 > **A wrong entry was here, and it's worth recording why.** On 2026-08-06 this
 > section was rewritten to say "Not connected", on the evidence that
@@ -125,17 +125,40 @@ workflow that produces the build you submit.
 
 ### 4. `Release Branch` — push to `release/*`, land in review
 
+**Created 2026-08-07**, id `90599769-efd9-4097-8ccd-1bedd07ff14e`, via
+`POST /v1/ciWorkflows`.
+
 | Setting | Value |
 |---|---|
-| Start Condition | **Branch Changes** → `release/*` |
-| Environment | Xcode 26.x (**not** the 27 beta — Apple rejects beta-built submissions) |
-| Actions | **Archive** (scheme `FinanceKitSync`, **Deployment Preparation: App Store Connect**) |
-| Environment Variables | `FKS_AUTO_SUBMIT=1`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY` (the `.p8` **contents**, marked secret) |
+| Start Condition | **Branch Changes** → `release/` (prefix) and `release` |
+| Environment | "Latest Release" — 17F113 / Xcode 26.6 GM, macOS 25G72. **Not** the 27 beta; Apple rejects beta-built submissions. |
+| Actions | **Archive**, scheme `FinanceKitSync`, `APP_STORE_ELIGIBLE` |
+| Environment Variables | ⚠️ **not set — you must add these by hand** |
 
 This is the hands-off path: push to a `release/*` branch and the build reaches
 App Store review with no clicks. The archive is Xcode Cloud's part;
 `ci_scripts/ci_post_xcodebuild.sh` does the rest by calling
 [`tools/submit_for_review.py`](../tools/submit_for_review.py).
+
+> **⚠️ One manual step remains, and the workflow will not submit without it.**
+> Environment variables **cannot be set through the App Store Connect API** —
+> `environmentVariables` is not a writable attribute on `ciWorkflows`, and the
+> request is rejected as an unknown attribute. So the workflow exists and is
+> enabled, but arrives with no environment at all.
+>
+> Add these once in **App Store Connect → Xcode Cloud → Manage Workflows →
+> Release Branch → Environment**:
+>
+> | Key | Value | Secret |
+> |---|---|---|
+> | `FKS_AUTO_SUBMIT` | `1` | no |
+> | `ASC_KEY_ID` | the key ID | no |
+> | `ASC_ISSUER_ID` | the issuer ID | no |
+> | `ASC_KEY` | the **contents** of the `.p8` file | **yes** |
+>
+> Until they exist the workflow archives and uploads but skips submission,
+> logging why. That is inert, not broken — but a release you assumed was
+> submitted will be sitting in App Store Connect untouched.
 
 ## Why submission needs a script at all
 
