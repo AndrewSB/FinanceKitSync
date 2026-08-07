@@ -6,15 +6,19 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(SyncCoordinator.self) private var coordinator
+    @Environment(Entitlement.self) private var entitlement
 #if DEBUG
     @State private var showingSettings = ScreenshotMode.showsSettings
+    @State private var showingPaywall = ScreenshotMode.showsPaywall
 #else
     @State private var showingSettings = false
+    @State private var showingPaywall = false
 #endif
 
     var body: some View {
         NavigationStack {
             List {
+                backgroundSyncSection
                 statusSection
                 countsSection
                 actionSection
@@ -33,6 +37,9 @@ struct HomeView: View {
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
             }
+            .sheet(isPresented: $showingPaywall) {
+                PaywallView()
+            }
             .refreshable {
                 await coordinator.syncNow()
             }
@@ -40,6 +47,30 @@ struct HomeView: View {
     }
 
     // MARK: - Sections
+
+    /// Expiry has to be loud. A subscription that lapses turns off a feature
+    /// the user set up once and then stopped thinking about — left silent,
+    /// they'd find out weeks later, from stale data on their own server.
+    @ViewBuilder
+    private var backgroundSyncSection: some View {
+        if entitlement.hasLapsed && ServerConfig.backgroundSyncEnabled {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Background sync is off", systemImage: "moon.zzz")
+                        .font(.headline)
+                    Text("New transactions are only sent while the app is open. Pull to refresh, or subscribe to have them sent automatically.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    Button("See subscription options") {
+                        showingPaywall = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .padding(.top, 2)
+                }
+                .padding(.vertical, 4)
+            }
+        }
+    }
 
     private var statusSection: some View {
         Section {

@@ -28,7 +28,11 @@ DEVICES=(
 RUNTIME="com.apple.CoreSimulator.SimRuntime.iOS-27-0"
 
 # Order matters — this is the order they appear in the listing.
-SCENES=(onboarding connect syncing settled settings)
+#
+# `paywall` is last because it also serves a second purpose: App Store Connect
+# requires a review screenshot on the subscription product itself, and that has
+# to show the paywall. Same capture, uploaded twice.
+SCENES=(onboarding connect syncing settled settings paywall)
 
 BUNDLE_ID="com.asb.FinanceKitSync"
 

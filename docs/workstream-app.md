@@ -31,11 +31,16 @@ app/
       ServerConfig.swift           URL in UserDefaults, token in Keychain
       Keychain.swift
       LogStore.swift
+    Purchases/
+      Entitlement.swift            may this install sync in the background?
+      SubscriptionStore.swift      product, purchase, restore, Transaction.updates
     Views/
       OnboardingView.swift
       HomeView.swift
       SettingsView.swift
+      PaywallView.swift
       LogView.swift
+    FinanceKitSync.storekit        local StoreKit config (scheme-referenced)
     Info.plist
     FinanceKitSync.entitlements
     Assets.xcassets

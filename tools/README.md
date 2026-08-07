@@ -20,7 +20,9 @@ export ASC_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_XXXXXXXXXX.p8
 | `asc.py` | Minimal API client. Signs its own ES256 JWT with `cryptography`, because PyJWT has no wheel for the Python 3.14 on this machine. |
 | `listing.json` | The App Store listing, as data. Edit this, not the web form. |
 | `push_listing.py` | Pushes `listing.json`. Idempotent; dry-run by default. |
-| `screenshots.sh` | Captures the five listing screens at both required sizes, from synthetic data. |
+| `subscription.json` | The v1.1 auto-renewable subscription, as data. |
+| `push_subscription.py` | Pushes `subscription.json` — group, product, price, localization, free trial, availability, review screenshot. Idempotent; dry-run by default. **Never yet run against the live account.** |
+| `screenshots.sh` | Captures the six listing screens at both required sizes, from synthetic data. The last, `paywall`, is also the subscription's review screenshot. |
 | `push_screenshots.py` | Uploads what `screenshots.sh` produced. Idempotent; dry-run by default. |
 | `ExportOptions.plist` | Re-signs the archive for the App Store. A plain `archive` is signed for development and App Store Connect rejects it. |
 
@@ -31,7 +33,13 @@ python3 tools/push_listing.py --apply    # write it
 
 ./tools/screenshots.sh                   # capture
 python3 tools/push_screenshots.py --apply
+
+python3 tools/push_subscription.py       # v1.1 — show what would change
+python3 tools/push_subscription.py --apply
 ```
+
+> In-app purchase endpoints all 403 until the **Paid Applications agreement** is
+> signed in App Store Connect. That is a web-UI step and comes first.
 
 ### Shipping a build
 

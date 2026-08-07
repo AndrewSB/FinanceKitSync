@@ -35,6 +35,13 @@
 
          Absent, the suite skips itself.
       -->
+      <!--
+         Tests run against the local StoreKit configuration too, so a purchase
+         path can be exercised without a sandbox Apple ID.
+      -->
+      <StoreKitConfigurationFileReference
+         identifier = "../../../FinanceKitSync/FinanceKitSync.storekit">
+      </StoreKitConfigurationFileReference>
       <Testables>
          <TestableReference skipped = "NO">
             <BuildableReference
@@ -57,6 +64,16 @@
             ReferencedContainer = "container:FinanceKitSync.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <!--
+         Debug runs use the local StoreKit configuration: the paywall, the
+         trial, renewals, expiry and refunds are all exercisable in the
+         simulator with no sandbox account. It is never consulted by a build
+         installed any other way — TestFlight and the App Store use the real
+         store.
+      -->
+      <StoreKitConfigurationFileReference
+         identifier = "../../../FinanceKitSync/FinanceKitSync.storekit">
+      </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction buildConfiguration = "Release" shouldUseLaunchSchemeArgsEnv = "YES" savedToolIdentifier = "" useCustomWorkingDirectory = "NO" debugDocumentVersioning = "YES">
       <BuildableProductRunnable runnableDebuggingMode = "0">

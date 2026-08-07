@@ -1,0 +1,19 @@
+{
+  "bundleId": "com.asb.FinanceKitSync",
+  "locale": "en-US",
+  "groupReferenceName": "FinanceKit Sync",
+  "groupDisplayName": "FinanceKit Sync",
+  "productId": "com.asb.FinanceKitSync.monthly",
+  "referenceName": "Background Sync (monthly)",
+  "subscriptionPeriod": "ONE_MONTH",
+  "priceUsd": "2.99",
+  "displayName": "Background Sync",
+  "description": "Sync new transactions to your server automatically, without opening the app. Manual sync stays free.",
+  "introductoryOffer": {
+    "offerMode": "FREE_TRIAL",
+    "duration": "THREE_DAYS",
+    "numberOfPeriods": 1
+  },
+  "reviewNote": "This subscription enables automatic background syncing. Manual sync (pull to refresh on the main screen) remains available without a subscription, and no previously synced data is withheld. Syncing requires a server the user runs themselves; see the app-level review notes.",
+  "reviewScreenshot": "build/screenshots/6.9in/6-paywall.png"
+}

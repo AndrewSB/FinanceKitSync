@@ -1,0 +1,61 @@
+{
+  "identifier" : "FKS0000-0000-0000-0000-000000000001",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6797988167",
+    "_developerTeamID" : "A29347X2JZ",
+    "_lastSynchronizedDate" : 776000000,
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21000000",
+      "localizations" : [
+
+      ],
+      "name" : "FinanceKit Sync",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "2.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "21000001",
+          "introductoryOffer" : {
+            "internalID" : "21000002",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "Sync new transactions to your server automatically, without opening the app.",
+              "displayName" : "Background Sync",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.asb.FinanceKitSync.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Background Sync (monthly)",
+          "subscriptionGroupID" : "21000000",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

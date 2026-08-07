@@ -2,7 +2,11 @@
 
 **Goal:** 3-day free trial on first launch, then $2.99/month auto-renewing.
 
-**Status:** planned, nothing built. v1.0 is free and in review.
+**Status:** **app side built** (2026-08-06), following the two recommendations
+below — grandfather pre-paywall installs, gate background sync only. What is
+left is everything that isn't code: the App Store Connect product, the sandbox
+pass, and the grandfathering device test. See **[Where this stands](#where-this-stands)**
+at the bottom.
 
 ---
 
@@ -167,3 +171,65 @@ A one-time purchase would fit the product's shape better and is worth
 considering. This is your call, and the plan above implements the subscription
 as asked either way — the only part that would change is the App Store Connect
 product type.
+
+---
+
+## Where this stands
+
+Built 2026-08-06, on the plan above. Both open decisions were taken as
+recommended: **grandfather** pre-paywall installs, gate **background sync only**.
+
+### In the app
+
+| | |
+|---|---|
+| `Purchases/Entitlement.swift` | The single source of truth. Three states — `.unknown`, `.entitled(.subscription/.grandfathered)`, `.notEntitled`. `Transaction.currentEntitlements` is read here and nowhere else. |
+| `Purchases/SubscriptionStore.swift` | Product load, purchase, restore, `Transaction.updates`. Exposes an `Offer` (price, period, trial) read off StoreKit — the trial line only appears when Apple says this Apple ID is eligible. |
+| `Views/PaywallView.swift` | Price, period, renewal terms and how to cancel, all on the screen itself (3.1.2). Restore, EULA and privacy links. |
+| `FinanceKitSync.storekit` | Local StoreKit configuration, wired into the scheme's Run **and** Test actions. |
+| `SyncCoordinator` | `backgroundRefreshAction(entitlement:backgroundSyncEnabled:isConfigured:)` — a pure function returning `.schedule` / `.leaveAsIs` / `.cancel`. The BGTask handler re-checks entitlement at execution time and does not reschedule when it's gone. |
+| `HomeView` | A loud "Background sync is off" section on lapse, with the manual path untouched. |
+| `SettingsView` | Status, manage subscription, restore, and a paywall entry on the gated toggle. |
+
+Ten tests were added; the suite is **54 and green**. None of them touch
+StoreKit: `Entitlement.fixed(_:)` and the pure gating function are the seams.
+
+**`.unknown` is the load-bearing state.** It never permits background sync and
+never cancels a pending refresh — so a cold start can't flash a paywall at a
+subscriber, and can't quietly drop their scheduled sync while StoreKit is still
+answering.
+
+**Grandfathering is decided once and cached.** `AppTransaction.originalAppVersion`
+is compared against `Entitlement.firstPaywalledBuild` (**20** — v1.0 shipped as
+build 19). An unparseable version, which is what StoreKit testing and TestFlight
+report, counts as *not* grandfathered: asking a developer to subscribe is the
+harmless direction to be wrong in.
+
+### App Store Connect
+
+`tools/push_subscription.py` + `tools/subscription.json` do the group, product,
+price, localization, free trial, availability, and review screenshot — dry-run
+by default, same shape as `push_listing.py`.
+
+> ⚠️ **Written but never run.** It has not been executed against the live
+> account, so treat its first `--apply` as the test. Run it dry first, and
+> expect the Paid Applications agreement to need signing before any in-app
+> purchase endpoint answers at all.
+
+### Still to do
+
+1. Sign the **Paid Applications agreement** — nothing else works until it is.
+2. `python3 tools/push_subscription.py` (dry), then `--apply`.
+3. `./tools/screenshots.sh` — it now captures a sixth `paywall` scene, which
+   doubles as the subscription's required review screenshot.
+4. **Sandbox pass**, including the trial-ineligible path.
+5. **Grandfathering device test** — install v1.0 first, then update. This one
+   cannot be done retroactively.
+6. Bump `MARKETING_VERSION` to 1.1, add the review note below, submit.
+
+Add to the review notes (`app-store.md` §4):
+
+> The app offers a 3-day free trial, then a $2.99/month auto-renewing
+> subscription. The subscription enables automatic background syncing. Manual
+> sync remains available without a subscription, and no previously synced data
+> is ever withheld.

@@ -7,6 +7,8 @@ import SwiftUI
 @main
 struct FinanceKitSyncApp: App {
     @State private var coordinator = SyncCoordinator.shared
+    @State private var entitlement = Entitlement.shared
+    @State private var subscriptions = SubscriptionStore.shared
     @Environment(\.scenePhase) private var scenePhase
 
     /// Onboarding is considered done once a server is configured — there's no
@@ -27,6 +29,10 @@ struct FinanceKitSyncApp: App {
     init() {
         // Must happen before the app finishes launching.
         SyncCoordinator.shared.registerBackgroundTask()
+        // Likewise: a transaction approved while the app was closed (a
+        // renewal, Ask to Buy, a refund) is delivered to this listener as soon
+        // as the process starts, and is lost if nobody is listening.
+        SubscriptionStore.shared.startObservingTransactions()
     }
 
     var body: some Scene {
@@ -39,6 +45,23 @@ struct FinanceKitSyncApp: App {
                 }
             }
             .environment(coordinator)
+            .environment(entitlement)
+            .environment(subscriptions)
+            .task {
+#if DEBUG
+                // Screenshot scenes seed both of these; asking StoreKit would
+                // overwrite the seed with "no product, not entitled".
+                guard !ScreenshotMode.isActive else { return }
+#endif
+                await entitlement.refresh()
+                await subscriptions.load()
+            }
+            // A lapse found at launch has to close the gate now, not at the
+            // next backgrounding — a request submitted while entitled would
+            // otherwise still be pending.
+            .onChange(of: entitlement.status) { _, _ in
+                coordinator.scheduleBackgroundRefresh()
+            }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background {

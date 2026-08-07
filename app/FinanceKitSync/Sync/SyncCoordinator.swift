@@ -21,6 +21,10 @@ final class SyncCoordinator {
         case syncing(progress: String)
     }
 
+    /// Whether background sync is allowed to run. Injected rather than reached
+    /// for, so the sync tests never link a StoreKit answer into their setup.
+    var entitlement: Entitlement = .shared
+
     private(set) var state: State = .idle
     private(set) var lastSyncDate: Date?
     private(set) var lastError: String?
@@ -127,6 +131,20 @@ final class SyncCoordinator {
                 return
             }
             Task { @MainActor in
+                // Entitlement is re-checked *here*, not just at scheduling
+                // time: a subscription can lapse in the hours between the two,
+                // and a request submitted while entitled would otherwise keep
+                // firing forever.
+                await self.entitlement.refresh()
+                guard self.entitlement.allowsBackgroundSync else {
+                    Log.append("background refresh skipped — background sync isn't active")
+                    // Deliberately no reschedule: nothing else would stop the
+                    // chain, and the app schedules again the moment the
+                    // subscription comes back.
+                    refreshTask.setTaskCompleted(success: true)
+                    return
+                }
+
                 // Always reschedule first: if this run crashes or is killed for
                 // running long, a follow-up is already on the books.
                 self.scheduleBackgroundRefresh()
@@ -143,8 +161,47 @@ final class SyncCoordinator {
         }
     }
 
+    /// What to do with the pending background-refresh request.
+    ///
+    /// Pulled out as a pure function because the interesting case is the one
+    /// that's easy to get wrong: at launch the entitlement is `.unknown`, and
+    /// treating "don't know yet" as "not entitled" would cancel a paying
+    /// subscriber's pending refresh on every cold start.
+    enum BackgroundRefreshAction: Equatable {
+        case schedule
+        /// Leave any pending request exactly as it is.
+        case leaveAsIs
+        case cancel
+    }
+
+    nonisolated static func backgroundRefreshAction(
+        entitlement: Entitlement.Status,
+        backgroundSyncEnabled: Bool,
+        isConfigured: Bool
+    ) -> BackgroundRefreshAction {
+        guard backgroundSyncEnabled, isConfigured else { return .cancel }
+        switch entitlement {
+        case .entitled: return .schedule
+        case .unknown: return .leaveAsIs
+        case .notEntitled: return .cancel
+        }
+    }
+
     func scheduleBackgroundRefresh() {
-        guard ServerConfig.backgroundSyncEnabled, ServerConfig.isConfigured else { return }
+        switch Self.backgroundRefreshAction(
+            entitlement: entitlement.status,
+            backgroundSyncEnabled: ServerConfig.backgroundSyncEnabled,
+            isConfigured: ServerConfig.isConfigured
+        ) {
+        case .leaveAsIs:
+            return
+        case .cancel:
+            cancelBackgroundRefresh()
+            return
+        case .schedule:
+            break
+        }
+
         let request = BGAppRefreshTaskRequest(identifier: Self.refreshTaskIdentifier)
         // A floor, not a promise — iOS decides when this actually runs.
         request.earliestBeginDate = Date(timeIntervalSinceNow: 30 * 60)
@@ -153,5 +210,11 @@ final class SyncCoordinator {
         } catch {
             Log.append("could not schedule background refresh: \(error.localizedDescription)")
         }
+    }
+
+    /// Drops any pending request. Called when the subscription lapses, so the
+    /// gate closes immediately rather than at the next launch.
+    func cancelBackgroundRefresh() {
+        BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: Self.refreshTaskIdentifier)
     }
 }

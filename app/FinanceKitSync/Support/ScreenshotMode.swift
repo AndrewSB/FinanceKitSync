@@ -35,6 +35,10 @@ enum ScreenshotMode {
         case settled
         /// Home with the settings sheet up.
         case settings
+        /// Home with the paywall up. The price is invented too: the capture
+        /// script launches from `simctl`, with no scheme and so no StoreKit
+        /// configuration file, and the real store isn't reachable either.
+        case paywall
     }
 
     /// Invented, and visibly so. `example.com` is reserved by RFC 2606, so this
@@ -58,6 +62,9 @@ enum ScreenshotMode {
     /// Whether `HomeView` should come up with the settings sheet presented.
     static var showsSettings: Bool { scene == .settings }
 
+    /// Whether `HomeView` should come up with the paywall presented.
+    static var showsPaywall: Bool { scene == .paywall }
+
     /// Whether the server form should render an already-passed connection test.
     /// No request is made — the listing shouldn't depend on a server being up.
     static var showsPassedConnectionTest: Bool {
@@ -76,12 +83,28 @@ enum ScreenshotMode {
             ServerConfig.setBaseURL(nil)
             ServerConfig.setToken(nil)
 
-        case .syncing, .settled, .settings:
+        case .syncing, .settled, .settings, .paywall:
             ServerConfig.setBaseURL(URL(string: sampleURL))
             ServerConfig.setToken(sampleToken)
             seedLog()
             seedCoordinator(for: scene)
+            seedPurchases(for: scene)
         }
+    }
+
+    /// The listing shows the paywall as a prospective subscriber sees it —
+    /// trial offered, nothing bought — and every other scene as a subscriber
+    /// does, so no scene renders the lapsed banner.
+    @MainActor
+    private static func seedPurchases(for scene: Scene) {
+        Entitlement.shared.seedForScreenshots(
+            scene == .paywall ? .notEntitled : .entitled(.subscription)
+        )
+        SubscriptionStore.shared.seedForScreenshots(
+            SubscriptionStore.Offer(
+                displayPrice: "$2.99", period: "month", introOffer: "3 days free"
+            )
+        )
     }
 
     @MainActor
