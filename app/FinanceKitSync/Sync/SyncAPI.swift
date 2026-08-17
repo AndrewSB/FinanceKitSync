@@ -22,7 +22,7 @@ struct SyncPacket: Encodable {
     }
 }
 
-struct SyncAccount: Encodable {
+struct SyncAccount: Encodable, Identifiable, Sendable {
     let id: String
     let name: String
     let institution: String
@@ -30,7 +30,7 @@ struct SyncAccount: Encodable {
     let currency: String
 }
 
-struct SyncTransaction: Encodable {
+struct SyncTransaction: Encodable, Identifiable, Sendable {
     let id: String
     let accountId: String
     let date: String

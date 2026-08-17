@@ -13,7 +13,7 @@ import Foundation
 import FinanceKit
 #endif
 
-struct WalletMetadata: Codable {
+struct WalletMetadata: Codable, Sendable {
     let source: String
     let sourceVersion: String?
     var wallet: WalletPayload
@@ -24,7 +24,7 @@ struct WalletMetadata: Codable {
         case wallet
     }
 
-    struct WalletPayload: Codable {
+    struct WalletPayload: Codable, Sendable {
         let transactionId: String
         let accountId: String
         // The fields below are filled in at fetch time when available, and
@@ -72,7 +72,7 @@ struct WalletMetadata: Codable {
         }
     }
 
-    struct Money: Codable {
+    struct Money: Codable, Sendable {
         let value: String   // stringified Decimal to dodge JSON float rounding
         let currency: String
     }

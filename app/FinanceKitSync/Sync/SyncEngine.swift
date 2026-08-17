@@ -34,6 +34,21 @@ actor SyncEngineGate {
 
 struct SyncEngine {
 
+    /// A device-local view of the same FinanceKit records used by the sync.
+    /// Keeping this boundary in the engine prevents the UI and sync paths from
+    /// quietly disagreeing about pagination, signs, or transaction metadata.
+    struct LocalSnapshot: Sendable {
+        let accounts: [SyncAccount]
+        let transactions: [LocalTransactionRecord]
+    }
+
+    struct LocalTransactionRecord: Identifiable, Sendable {
+        let transaction: SyncTransaction
+        let transactionDate: Date
+
+        var id: String { transaction.id }
+    }
+
     enum Outcome {
         case notConfigured
         /// Nothing was attempted (e.g. a run is already in flight).
@@ -182,6 +197,44 @@ struct SyncEngine {
         } catch {
             log("run failed: \(error.localizedDescription)")
             return .failure(sent: 0, error: error)
+        }
+    }
+
+    /// Reads every account and transaction available to this app directly from
+    /// FinanceKit. This does not consult the sync ledger or contact the server.
+    static func loadLocalSnapshot(
+        log: @Sendable @escaping (String) -> Void = { _ in }
+    ) async throws -> LocalSnapshot {
+        try await authorizeFinanceKitAccess()
+
+        let (accounts, accountInfoById) = try await fetchAccounts(log: log)
+        let history = try await fetchFullHistory(log: log)
+        let transactions = history.map { txn in
+            LocalTransactionRecord(
+                transaction: packetEntry(for: txn, info: accountInfoById[txn.accountID]).0,
+                transactionDate: txn.transactionDate
+            )
+        }
+        return LocalSnapshot(accounts: accounts, transactions: transactions)
+    }
+
+    private static func authorizeFinanceKitAccess() async throws {
+        guard !isSimulator else {
+            throw NSError(domain: "SyncEngine", code: -2, userInfo: [
+                NSLocalizedDescriptionKey: "FinanceKit records are only available on a physical device."
+            ])
+        }
+        guard FinanceStore.isDataAvailable(.financialData) else {
+            throw NSError(domain: "SyncEngine", code: -3, userInfo: [
+                NSLocalizedDescriptionKey: "Financial data isn't available on this device."
+            ])
+        }
+        let status = try await FinanceStore.shared.requestAuthorization()
+        guard status == .authorized else {
+            throw NSError(domain: "SyncEngine", code: -4, userInfo: [
+                NSLocalizedDescriptionKey:
+                    "Access to financial data isn't authorized. Grant it in Settings › Privacy & Security › Financial Data."
+            ])
         }
     }
 

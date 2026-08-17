@@ -73,4 +73,16 @@ struct FinanceKitAvailabilityTests {
             }
         }
     }
+
+    @Test("the local viewer fails safely in the simulator")
+    func localViewerSkipsFinanceKit() async {
+        #if targetEnvironment(simulator)
+        do {
+            _ = try await SyncEngine.loadLocalSnapshot()
+            Issue.record("expected the local viewer to reject the simulator")
+        } catch {
+            #expect(error.localizedDescription.contains("physical device"))
+        }
+        #endif
+    }
 }

@@ -94,7 +94,13 @@ struct HomeView: View {
     }
 
     private var activitySection: some View {
-        Section {
+        Section("Explore") {
+            NavigationLink {
+                LocalRecordsView()
+            } label: {
+                Label("Local records", systemImage: "tray.full")
+            }
+
             NavigationLink {
                 LogView()
             } label: {
