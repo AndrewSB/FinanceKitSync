@@ -86,6 +86,19 @@ final class SyncCoordinator {
         return outcome
     }
 
+    /// Re-reads the published state after entering or leaving demo mode. The
+    /// demo has its own ledger, and a "last sync" from the other world would
+    /// be misleading, so that is cleared rather than carried across.
+    func reloadAfterModeChange() {
+        state = .idle
+        lastSyncDate = nil
+        lastError = nil
+        lastSentCount = 0
+        defaults.removeObject(forKey: lastSyncKey)
+        defaults.removeObject(forKey: lastErrorKey)
+        refreshCounts()
+    }
+
     /// Clears the ledger so the next run replays the full history.
     func resendEverything() {
         guard let ledger = SyncLedger.open() else {
@@ -144,7 +157,10 @@ final class SyncCoordinator {
     }
 
     func scheduleBackgroundRefresh() {
-        guard ServerConfig.backgroundSyncEnabled, ServerConfig.isConfigured else { return }
+        // The demo server lives in this process; there is nothing for a
+        // background run to keep current.
+        guard ServerConfig.backgroundSyncEnabled, ServerConfig.isConfigured,
+              !DemoMode.isEnabled else { return }
         let request = BGAppRefreshTaskRequest(identifier: Self.refreshTaskIdentifier)
         // A floor, not a promise — iOS decides when this actually runs.
         request.earliestBeginDate = Date(timeIntervalSinceNow: 30 * 60)

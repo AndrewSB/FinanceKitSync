@@ -53,8 +53,12 @@ enum ServerConfig {
 
     // MARK: - Token
 
+    /// In demo mode this is the demo server's token, so the engine and the
+    /// settings form see a coherent (address, token) pair. The user's real
+    /// token stays in the Keychain, untouched, for when the demo ends.
     static var token: String? {
-        Keychain.read(tokenAccount)
+        if DemoMode.isEnabled { return DemoMode.token }
+        return Keychain.read(tokenAccount)
     }
 
     @discardableResult

@@ -98,7 +98,7 @@ struct ServerFormView: View {
         testResult = nil
         let token = tokenText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        switch await SyncAPI.checkHealth(baseURL: url, token: token) {
+        switch await SyncAPI.checkHealth(baseURL: url, token: token, session: DemoMode.session(for: url)) {
         case .ok:
             testResult = .ok
         case .unauthorized:

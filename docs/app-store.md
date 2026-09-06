@@ -168,68 +168,52 @@ Attach this as a note:
 
 ## Step 4 — Review notes
 
-Paste into "Notes for Review". Reviewers cannot test this app without a server,
-so give them one.
+> **Rejected 2026-09-06 under guideline 2.1** (App Review needs a demo account
+> or a demonstration mode; a video is not accepted). The app has no accounts,
+> so the answer is a demonstration mode. It now exists — see
+> [`workstream-app.md`](./workstream-app.md) and
+> `app/FinanceKitSync/Support/DemoMode.swift` — and the notes below assume it.
+> The throwaway review server that used to be planned here is no longer needed.
+
+Paste into "Notes for Review":
 
 > This app reads the user's Apple Card, Apple Cash, and Apple Pay transactions
 > via FinanceKit and mirrors them to a personal server address the user
-> configures. There is no hosted backend, no account, and no data reaches us.
+> configures. There is no hosted backend, no account, and no sign-in of any
+> kind, so there is no demo account to provide.
 >
-> To review the sync feature end to end you'll need a test endpoint.
+> Instead the app includes a built-in DEMO MODE that exercises every feature
+> without a server and without an Apple Card:
 >
-> Test server URL: __________________________
-> Bearer token:    __________________________
+> 1. Launch the app and tap "Continue" on the first screen.
+> 2. On the "Connect" screen, tap "Try the demo" (below the server fields).
+> 3. The main screen opens in demo mode. Tap "Sync now": 60 sample transactions
+>    are sent to a built-in stand-in server and acknowledged, and the counts
+>    and "Last sync" update. Pull to refresh does the same.
+> 4. "Local records" lists the sample accounts and transactions, each with a
+>    detail screen. "Activity log" shows the sync log and can be exported.
+> 5. The gear icon opens Settings. "Test connection" reports Connected.
+>    "Re-send everything" clears the acknowledgement ledger so the next sync
+>    replays all 60 transactions. "Leave demo mode" returns to onboarding.
 >
-> Enter both on the "Connect your server" screen during onboarding, tap "Test
-> connection" (it should report Connected), then continue and allow access to
-> financial data when iOS asks. On the main screen, tap "Sync now".
+> In demo mode nothing is read from the device and nothing leaves it: the
+> transactions are fabricated and the "server" runs inside the app. Outside
+> demo mode the app is identical, except that it reads FinanceKit (after the
+> iOS financial-data permission prompt) and POSTs to the address the user
+> entered. On a device with no Apple Card history that real sync reports zero
+> transactions and succeeds, which is correct behavior.
 >
-> On a device with no Apple Card or Apple Pay transaction history, the sync will
-> report zero transactions and succeed — this is correct behavior, not an error.
->
-> The full server source is at github.com/AndrewSB/FinanceKitSync under
-> `server/`, and is about 200 lines.
+> The full source, including the server, is at
+> github.com/AndrewSB/FinanceKitSync.
 
-> **Two corrections to the text above, both made 2026-08-06.**
->
-> It previously claimed the app *"presents balances, net worth, and spending
-> trends on device."* **It does not** — none of those screens exist. That
-> sentence was drafted back when the plan was to build a financial-management
-> surface in order to qualify for the entitlement, a plan since withdrawn (see
-> step 0). Telling App Review the app does something it visibly doesn't is a
-> rejection waiting to happen, so it now describes the app as built.
->
-> The note below also said `server/deploy.sh` "will spin up a second instance on
-> any host." It won't, as written — see the gap listed under it.
+### The throwaway review server — superseded
 
-### The throwaway review server
-
-**Before submitting:** stand up a separate server for this, with its own token,
-containing only synthetic data. Do not give App Review the token to `box`.
-
-**This is not yet done, and it is not a one-liner.** `deploy.sh` is
-parameterized by `FKS_HOST`, `FKS_REMOTE_DIR`, and `FKS_FUNNEL_PORT`, but three
-things are hardcoded and would collide with the live instance:
-
-| | |
-|---|---|
-| `LOCAL_PORT=8501` | `deploy.sh`, and the published port in `docker-compose.yml` |
-| `container_name: financekitsync` | `docker-compose.yml` — Docker refuses a second container with the same name |
-| `image: financekitsync:latest` | shared, so a rebuild for one instance silently swaps the other's image |
-
-So a second instance needs those three parameterized first — roughly a
-30-line change to `docker-compose.yml` and `deploy.sh` — or a second host.
-
-It also needs **Funnel**, because App Review is not on the tailnet. Read the
-warning in `deploy.sh` before enabling it: Funnel is per-port, not per-path,
-and turning it on for a port publishes every route on that port. Use a port
-that serves nothing else. The 2026-08-04 incident in
-[`STATUS.md`](./STATUS.md) is what happens otherwise.
-
-Finally it needs synthetic contents: the reviewer's device will have no Apple
-Card history, so a sync there reports zero transactions and the database stays
-empty. Seed it by POSTing a handful of invented packets to
-`/financekit-sync` with the review token before submitting.
+This section used to plan a second server instance, exposed over Funnel and
+seeded with synthetic packets, for App Review to sync against. **Demo mode
+replaces it entirely**: the reviewer's device needs no Apple Card history (the
+sample dataset stands in for FinanceKit) and no reachable server (an in-process
+stand-in answers the same routes). Nothing has to be deployed, exposed, or
+seeded before submitting, and no token is handed to anyone.
 
 ---
 
@@ -261,8 +245,9 @@ screenshot your own transaction history.
 - [x] Screenshots captured from synthetic data — 2 sets × 5, all `COMPLETE`
 - [x] `Release` workflow run, build uploaded
 - [x] Submit — build 25, submission `f3daf509-…`
-- [ ] **Throwaway review server running with synthetic data** — not done, by
-      decision. See below; it is the most likely cause of a 2.1 rejection.
+- [x] ~~Throwaway review server running with synthetic data~~ — it was the
+      cause of the 2.1 rejection on 2026-09-06, and is now replaced by the
+      in-app demo mode. Update the review notes (step 4) when resubmitting.
 - [x] **Pass on a real device with real transactions** — 2026-08-07. Confirmed
       by Andrew on hardware. It went unrun long enough to let a build that could
       not request the Wallet permission reach App Review; the itemised bulk-sync

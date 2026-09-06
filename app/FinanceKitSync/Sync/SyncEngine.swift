@@ -103,6 +103,16 @@ struct SyncEngine {
             ))
         }
 
+        // Demo mode: the invented dataset stands in for FinanceKit and the
+        // in-process `DemoServer` for the receiver. Everything from here on —
+        // the ledger diff, batching, POSTing, acknowledging — is the real path.
+        if DemoMode.isEnabled {
+            log("demo mode: using the sample dataset instead of FinanceKit")
+            let entries = DemoDataset.entries.map { (id: $0.id, hash: $0.hash, packet: $0.packet) }
+            let api = SyncAPI(baseURL: baseURL, token: token, session: DemoMode.session(for: baseURL))
+            return await send(entries, accounts: DemoDataset.syncAccounts, via: api, ledger: ledger, log: log)
+        }
+
         // The simulator has no FinanceKit store, and — measured, not assumed —
         // `isDataAvailable(.financialData)` still returns TRUE there. The first
         // real query then traps inside FinanceKit rather than throwing:
@@ -120,18 +130,7 @@ struct SyncEngine {
         do {
             // Same hazard on device: FinanceKit traps rather than throws when
             // its store can't be opened, so check before querying.
-            guard FinanceStore.isDataAvailable(.financialData) else {
-                throw NSError(domain: "SyncEngine", code: -3, userInfo: [
-                    NSLocalizedDescriptionKey: "Financial data isn't available on this device."
-                ])
-            }
-            let status = try await FinanceStore.shared.requestAuthorization()
-            guard status == .authorized else {
-                throw NSError(domain: "SyncEngine", code: -4, userInfo: [
-                    NSLocalizedDescriptionKey:
-                        "Access to financial data isn't authorized. Grant it in Settings › Privacy & Security › Financial Data."
-                ])
-            }
+            try await authorizeFinanceKitAccess()
 
             // All accounts with current balances. Accounts ride along on every
             // packet so the server can always reconcile names and balances.
@@ -148,13 +147,29 @@ struct SyncEngine {
                 entries.append((id: packet.id, hash: hash, packet: packet))
             }
 
+            let api = SyncAPI(baseURL: baseURL, token: token)
+            return await send(entries, accounts: accounts, via: api, ledger: ledger, log: log)
+        } catch {
+            log("run failed: \(error.localizedDescription)")
+            return .failure(sent: 0, error: error)
+        }
+    }
+
+    /// The server-facing half of a run: diff `entries` against the ledger,
+    /// POST what's new or changed in batches, acknowledge as each lands.
+    private static func send(
+        _ entries: [(id: String, hash: String, packet: SyncTransaction)],
+        accounts: [SyncAccount],
+        via api: SyncAPI,
+        ledger: SyncLedger,
+        log: @Sendable (String) -> Void
+    ) async -> Outcome {
+        do {
             var existing = try ledger.recordsById()
             // Send anything the ledger has never seen, or whose content changed
             // since the server last acknowledged it.
             let toSend = entries.filter { existing[$0.id]?.contentHash != $0.hash }
             log("\(toSend.count) of \(entries.count) transactions need sending (\(existing.count) already acknowledged)")
-
-            let api = SyncAPI(baseURL: baseURL, token: token)
 
             // Nothing new: still send one accounts-only packet so the server
             // gets fresh balances on every sync.
@@ -205,6 +220,7 @@ struct SyncEngine {
     static func loadLocalSnapshot(
         log: @Sendable @escaping (String) -> Void = { _ in }
     ) async throws -> LocalSnapshot {
+        if DemoMode.isEnabled { return DemoDataset.snapshot }
         try await authorizeFinanceKitAccess()
 
         let (accounts, accountInfoById) = try await fetchAccounts(log: log)

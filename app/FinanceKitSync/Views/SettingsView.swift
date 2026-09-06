@@ -7,6 +7,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(SyncCoordinator.self) private var coordinator
     @Environment(\.dismiss) private var dismiss
+    @State private var demo = DemoMode.shared
 
     @State private var urlText = ServerConfig.baseURLString
     @State private var tokenText = ServerConfig.token ?? ""
@@ -16,6 +17,19 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if demo.isActive {
+                    Section {
+                        Button("Leave demo mode") {
+                            demo.leave()
+                            dismiss()
+                        }
+                    } header: {
+                        Text("Demo mode")
+                    } footer: {
+                        Text("The server below is a built-in stand-in and the transactions are samples. Enter a real server address and save to leave the demo, or tap the button.")
+                    }
+                }
+
                 ServerFormView(urlText: $urlText, tokenText: $tokenText)
 
                 Section {
@@ -73,6 +87,13 @@ struct SettingsView: View {
     private func save() {
         guard let url = ServerConfig.validate(urlText) else { return }
         let token = tokenText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Saving a real server while in the demo means the demo is over.
+        // Leaving first restores the pre-demo config, so the comparison below
+        // is against the user's last real server rather than the stand-in.
+        if demo.isActive, !DemoMode.isDemoURL(url) {
+            demo.leave()
+        }
         let addressChanged = url != ServerConfig.baseURL
 
         ServerConfig.setBaseURL(url)

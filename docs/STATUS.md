@@ -2,12 +2,20 @@
 
 Single source of truth for where the project stands.
 
-**Last updated:** 2026-08-07
-**State:** 🟢 **Works on device, and in review.** Version 1.0 (**build 25**) is
-`WAITING_FOR_REVIEW` as of 2026-08-07 02:55 UTC, submission
-`f3daf509-6a74-4f57-8ffe-d93c2328b545`, carrying the
-`NSFinancialDataUsageDescription` fix. The build-19 submission (`de454c50-…`)
-was cancelled to make room for it.
+**Last updated:** 2026-09-06
+**State:** 🟠 **Rejected by App Review (guideline 2.1); demo mode built, not
+yet resubmitted.** The reviewer needs a demo account or a demonstration mode
+to exercise the app; a video is not accepted. The app has no accounts, so a
+demo mode was added on `main` (2026-09-06): "Try the demo" on the Connect
+screen swaps in a fixed sample dataset for FinanceKit and an in-process
+stand-in for the server, and every other code path runs unchanged. See
+[`app-store.md`](./app-store.md) step 4 for the review notes to paste.
+**Next:** run the `Release` workflow to upload a new build, update the review
+notes, resubmit.
+
+Before that, version 1.0 (**build 25**) had been `WAITING_FOR_REVIEW` since
+2026-08-07 02:55 UTC, submission `f3daf509-6a74-4f57-8ffe-d93c2328b545`,
+carrying the `NSFinancialDataUsageDescription` fix.
 
 **Andrew confirmed the app working on a real iPhone on 2026-08-07** — the first
 time it has ever run on hardware. That closes the project's largest open
@@ -104,7 +112,7 @@ Verified end to end on 2026-08-06 — the signed binary carries:
 | Build in review | ✅ **25**, from Xcode Cloud `Release` on Xcode 26.6 GM. (Builds 1 and 19 are superseded — 1 was built with the local Xcode 27 beta, 19 could not request the Wallet permission) |
 | Screenshot sets | ✅ **2**, 5 images each, all `COMPLETE` |
 | Privacy nutrition labels | ✅ done by Andrew in the web UI (no API exists) |
-| Throwaway review server | ➖ **not provided, by decision** — see below |
+| Way for App Review to test without a server | ✅ **in-app demo mode**, added 2026-09-06 after the 2.1 rejection. Replaces the throwaway review server, which is no longer needed. |
 | Device verification | ✅ **confirmed on hardware 2026-08-07** — permission prompt and app both work. Itemised sync checks not individually verified. |
 | Submission record | ✅ `f3daf509-…`, `WAITING_FOR_REVIEW` |
 
@@ -413,6 +421,11 @@ error indefinitely. See the top of this file.
   submission error reports its ID as the *version* ID, which is wrong and sends
   you to a 404. Inline creation in `appPriceSchedules` needs the literal
   `${local-id}` format.
+- **2026-09-06** — **Rejected under 2.1**: App Review could not exercise the app
+  without a server, exactly the risk recorded below. Fix: an in-app demo mode
+  (`Support/DemoMode.swift`) rather than a hosted review server, so nothing
+  needs deploying or exposing. 52/52 tests pass; walked through in the
+  simulator. Not yet resubmitted.
 - **2026-08-06** — Submitted **before** the device test, on Andrew's call, with
   no review server. Both risks are recorded above rather than smoothed over. The
   app has still never read a real transaction.

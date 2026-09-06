@@ -7,6 +7,7 @@ import SwiftUI
 @main
 struct FinanceKitSyncApp: App {
     @State private var coordinator = SyncCoordinator.shared
+    @State private var demo = DemoMode.shared
     @Environment(\.scenePhase) private var scenePhase
 
     /// Onboarding is considered done once a server is configured — there's no
@@ -39,6 +40,11 @@ struct FinanceKitSyncApp: App {
                 }
             }
             .environment(coordinator)
+        }
+        // Leaving the demo with no real server configured means back to the
+        // start; entering it counts as configured, since it sets a server.
+        .onChange(of: demo.isActive) { _, _ in
+            hasCompletedOnboarding = ServerConfig.isConfigured
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background {

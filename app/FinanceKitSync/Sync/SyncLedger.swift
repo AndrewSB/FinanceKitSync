@@ -32,6 +32,9 @@ final class SyncRecord {
 
 struct SyncLedger {
     static let storeFileName = "ledger.store"
+    /// The demo keeps its own bookkeeping, so trying the demo never forgets
+    /// what the user's real server has acknowledged, and vice versa.
+    static let demoStoreFileName = "ledger-demo.store"
 
     let context: ModelContext
 
@@ -47,13 +50,15 @@ struct SyncLedger {
         ) else {
             return nil
         }
-        let storeURL = supportURL.appendingPathComponent(storeFileName)
+        let demo = DemoMode.isEnabled
+        let storeURL = supportURL.appendingPathComponent(demo ? demoStoreFileName : storeFileName)
         do {
             let schema = Schema([SyncRecord.self])
             // .none: local-only bookkeeping. CloudKit would also reject the
             // unique constraint on `id`.
             let configuration = ModelConfiguration(
-                "SyncLedger", schema: schema, url: storeURL, cloudKitDatabase: .none
+                demo ? "SyncLedgerDemo" : "SyncLedger",
+                schema: schema, url: storeURL, cloudKitDatabase: .none
             )
             let container = try ModelContainer(for: schema, configurations: [configuration])
             return SyncLedger(context: ModelContext(container))

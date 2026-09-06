@@ -27,10 +27,14 @@ docs/      spec, workstream tracking, App Store material
 
 ## Status
 
-🟢 **Working, and in review.** The `com.apple.developer.financekit` entitlement
-was approved and provisioned on 2026-08-06, the app builds and passes 44 tests,
-and the server is deployed and verified. Confirmed working on a real iPhone on
-2026-08-07. Version 1.0 (build 25) is waiting for App Store review.
+🟠 **Working; rejected once by App Review, fix built.** The
+`com.apple.developer.financekit` entitlement was approved and provisioned on
+2026-08-06, the app builds and passes 52 tests, the server is deployed and
+verified, and the app was confirmed working on a real iPhone on 2026-08-07.
+Version 1.0 was rejected on 2026-09-06 under guideline 2.1 because reviewers
+had no way to use it without a server. The app now has a **demo mode** ("Try
+the demo" on the Connect screen) that runs the whole pipeline against sample
+transactions and a built-in stand-in server. Resubmission is the next step.
 
 **[docs/STATUS.md](docs/STATUS.md) is the single source of truth**, and opens
 with exactly where things stand and what is still owed.

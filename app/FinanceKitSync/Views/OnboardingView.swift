@@ -90,6 +90,19 @@ struct OnboardingView: View {
             } footer: {
                 Text("Don't have a server yet? The setup guide walks through running one on a machine you own.")
             }
+
+            Section {
+                Button {
+                    // The demo needs neither a server nor Wallet access, so
+                    // the permission step is skipped along with the address.
+                    DemoMode.shared.enter()
+                    onComplete()
+                } label: {
+                    Label("Try the demo", systemImage: "play.circle")
+                }
+            } footer: {
+                Text("Explore every feature with sample transactions and a built-in stand-in for the server. No server, no Apple Card, and nothing is read from your device. You can leave the demo from Settings at any time.")
+            }
         }
         .navigationTitle("Connect")
         .navigationBarTitleDisplayMode(.inline)

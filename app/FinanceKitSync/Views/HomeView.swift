@@ -6,6 +6,7 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(SyncCoordinator.self) private var coordinator
+    @State private var demo = DemoMode.shared
 #if DEBUG
     @State private var showingSettings = ScreenshotMode.showsSettings
 #else
@@ -15,6 +16,9 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             List {
+                if demo.isActive {
+                    demoSection
+                }
                 statusSection
                 countsSection
                 actionSection
@@ -40,6 +44,26 @@ struct HomeView: View {
     }
 
     // MARK: - Sections
+
+    private var demoSection: some View {
+        Section {
+            Label {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Demo mode")
+                        .font(.headline)
+                    Text("The transactions and the server are simulated. Nothing is read from this device or sent anywhere.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } icon: {
+                Image(systemName: "play.circle.fill")
+                    .foregroundStyle(.tint)
+            }
+            Button("Leave demo mode") {
+                demo.leave()
+            }
+        }
+    }
 
     private var statusSection: some View {
         Section {
