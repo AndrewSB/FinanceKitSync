@@ -29,15 +29,14 @@ FKS_TOKEN=dev-token FKS_DB_PATH=./data/dev.db uvicorn app.main:app --port 8501
 
 `/health` is intentionally unauthenticated so the app's onboarding can verify
 the address before a token is entered. It returns nothing useful to a scanner.
-There are no `/docs` or `/openapi.json` routes — this endpoint is on the public
-internet and shouldn't advertise itself.
+There are no `/docs` or `/openapi.json` routes. This process is reachable only
+on localhost; Box API owns network exposure.
 
-## Tailnet address
+## Network boundary
 
-`https://box.tail590aa.ts.net:8501` — Tailscale Serve, tailnet-only, on a port
-this service owns. It is deliberately not sharing :8443 with box-api and the
-web UI: a serve mount at `/` replaces whatever was there, so deploying here
-used to evict the web UI.
+Docker binds `127.0.0.1:8501` only. There is deliberately no Tailscale listener
+for this port. The iPhone and downstream consumers use Box API's namespaced
+endpoint: `https://$FKS_HOST:8443/api/financekit`.
 
 ## Deploy to `box`
 

@@ -17,10 +17,9 @@ signing without approval and reads nothing; do not use it here.
 ## Before you start
 
 1. **Plug the iPhone into the Mac**, or pair it for wireless debugging.
-2. **Bring the phone onto the tailnet.** `box` serves `https://$FKS_HOST:8501`
-   tailnet-only (see [Host names](workstream-server.md#host-names)), so the
-   phone needs the Tailscale app connected. Off-tailnet access is not a flag
-   flip any more; read the note in `server/deploy.sh` first.
+2. **Bring the phone onto the tailnet.** Box API exposes the FinanceKit RPC at
+   `https://$FKS_HOST:8443/api/financekit`; the underlying service remains
+   localhost-only on the box.
 3. The account needs **real Apple Card, Apple Cash, or Apple Pay history**. A
    device with none is a valid test of "zero transactions is not an error", but
    it proves nothing about the read itself.
@@ -55,7 +54,7 @@ This is the part that has never been proven, and the part that was broken.
 
 ## Part 2 — the app around it
 
-Server URL: `https://$FKS_HOST:8501`
+Server URL: `https://$FKS_HOST:8443/api/financekit`
 Token: `ssh box "grep '^FKS_TOKEN=' /opt/financekitsync/.env | cut -d= -f2-"`
 
 1. **Enter a bad URL** (`http://example.com`) → footer flags it as not valid
