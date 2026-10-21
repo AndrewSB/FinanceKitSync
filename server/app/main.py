@@ -18,9 +18,10 @@ import os
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, status
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from . import notify
 from .db import Database
 
 logging.basicConfig(
@@ -104,6 +105,9 @@ class Transaction(BaseModel):
 
 class Packet(BaseModel):
     schema_version: int
+    # Stable per-install UUID from the app's Keychain. Optional so builds that
+    # predate it keep syncing; their uploads count as the legacy install.
+    device_install_id: str | None = Field(default=None, max_length=64)
     accounts: list[Account] = Field(default_factory=list)
     transactions: list[Transaction] = Field(default_factory=list)
 
@@ -113,6 +117,8 @@ class Receipt(BaseModel):
     transactions_received: int
     transactions_inserted: int
     transactions_updated: int
+    # Kept out of the API until an identity question is resolved.
+    transactions_held: int = 0
 
 
 # -- routes -------------------------------------------------------------
@@ -128,7 +134,9 @@ def health() -> dict[str, Any]:
 
 
 @app.post("/financekit-sync", response_model=Receipt)
-def financekit_sync(packet: Packet, _: Authenticated) -> Receipt:
+def financekit_sync(
+    packet: Packet, background: BackgroundTasks, _: Authenticated
+) -> Receipt:
     if packet.schema_version != SCHEMA_VERSION:
         # Reject rather than guess. A client sending a schema we don't
         # understand is better off retrying after the server is updated.
@@ -143,14 +151,18 @@ def financekit_sync(packet: Packet, _: Authenticated) -> Receipt:
     result = db.upsert_packet(
         accounts=[a.model_dump() for a in packet.accounts],
         transactions=[t.model_dump() for t in packet.transactions],
+        install_id=packet.device_install_id,
     )
+    if result["events"]:
+        background.add_task(notify.send, result["events"])
 
     logger.info(
-        "packet: %d account(s), %d transaction(s) (%d new, %d updated)",
+        "packet: %d account(s), %d transaction(s) (%d new, %d updated, %d held)",
         len(packet.accounts),
         len(packet.transactions),
         result["inserted"],
         result["updated"],
+        result["held"],
     )
 
     return Receipt(
@@ -158,6 +170,7 @@ def financekit_sync(packet: Packet, _: Authenticated) -> Receipt:
         transactions_received=len(packet.transactions),
         transactions_inserted=result["inserted"],
         transactions_updated=result["updated"],
+        transactions_held=result["held"],
     )
 
 

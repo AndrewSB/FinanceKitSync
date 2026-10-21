@@ -109,6 +109,9 @@ struct PacketEncodingTests {
 
         // A rename here silently breaks every deployed server.
         #expect(json["schema_version"] as? Int == 1)
+        // Stable across packets: the server keys device aliases on it.
+        #expect(json["device_install_id"] as? String == ServerConfig.deviceInstallID)
+        #expect(UUID(uuidString: ServerConfig.deviceInstallID) != nil)
         let txn = (json["transactions"] as! [[String: Any]])[0]
         #expect(txn["account_id"] as? String == "a")
         #expect(txn["id"] as? String == "t")

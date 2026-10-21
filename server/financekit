@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#
+# Manual identity resolution against the running container, e.g. on box:
+#   /opt/financekitsync/financekit pending
+#   /opt/financekitsync/financekit alias-account <device_account_id> <canonical_account_id>
+#   /opt/financekitsync/financekit release-held <device_account_id> [--drop]
+#
+set -euo pipefail
+exec docker exec -i financekitsync python -m app.cli "$@"

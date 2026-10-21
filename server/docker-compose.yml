@@ -4,11 +4,11 @@ services:
     image: financekitsync:latest
     container_name: financekitsync
     restart: unless-stopped
-    # Bound to loopback only. Public reachability comes from Tailscale Funnel
-    # on the host, which proxies to this port — the container itself is never
-    # directly exposed.
-    ports:
-      - "127.0.0.1:8501:8501"
+    # Host networking, bound to the host's loopback only: Box API forwards the
+    # namespaced RPC routes here, and this container reaches Box API's /notify
+    # on 127.0.0.1:8444 for identity tripwires. Nothing listens beyond loopback.
+    network_mode: host
+    command: ["uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8501", "--workers", "1"]
     env_file:
       - .env
     volumes:

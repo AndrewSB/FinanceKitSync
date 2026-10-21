@@ -16,6 +16,10 @@ FKS_TOKEN=dev-token FKS_DB_PATH=./data/dev.db uvicorn app.main:app --port 8501
 |---|---|---|
 | `FKS_TOKEN` | *(required)* | Bearer token. The server refuses to start without it. |
 | `FKS_DB_PATH` | `/data/financekitsync.db` | SQLite file path. |
+| `FKS_NOTIFY_URL` | *(unset)* | Box API relay for identity tripwires, e.g. `http://127.0.0.1:8444/notify`. Unset: logged only. |
+| `FKS_NOTIFY_API_KEY` | *(unset)* | Box API key sent as `X-API-Key` to the relay. |
+| `FKS_ACCOUNT_STALE_HOURS` | `24` | How long an account's install must be silent before a new device may take it over. |
+| `FKS_TRIPWIRE_BURST` | `3` | Unmatched old-dated rows in one upload that count as a re-key box missed. |
 
 ## API
 
@@ -32,9 +36,59 @@ the address before a token is entered. It returns nothing useful to a scanner.
 There are no `/docs` or `/openapi.json` routes. This process is reachable only
 on localhost; Box API owns network exposure.
 
+## Stable identity across devices
+
+FinanceKit IDs are device-local: a new phone, reinstall or re-authorisation can
+re-key accounts and transactions box already holds. Box owns identity instead.
+The `id` and `account_id` it serves are *canonical*: the first device ID it saw
+for that record. Every upload carries the app's `device_install_id` (a
+per-install UUID kept in the Keychain, never synced) and resolves through
+`account_aliases` / `transaction_aliases`:
+
+- A known device ID (from any install) is an update to its canonical row.
+- An unknown transaction on a known account is matched to an existing row
+  from a *different* install by fingerprint: wallet date to the second, amount,
+  currency, credit/debit, type and description. Identical fingerprints pair
+  one to one in date order; a surplus is a new row.
+- An unknown account is aliased onto an existing one only when institution and
+  name match, the existing account's install has been silent for
+  `FKS_ACCOUNT_STALE_HOURS`, and fingerprints overlap strongly. Otherwise it
+  and its transactions are held out of the API and a notification is sent.
+- A burst of unmatched transactions dated inside history box already holds is
+  held the same way.
+
+`metadata.wallet` carries the latest device payload with its
+`transaction_id` and `account_id` rewritten to canonical. Resolve holds with
+`./financekit` on box:
+
+```bash
+./financekit pending
+./financekit alias-account <device_account_id> <canonical_account_id>
+./financekit release-held <device_account_id> [--drop]
+```
+
+### One-time repair (2026-10 phone switch)
+
+```bash
+docker exec financekitsync python -m app.repair            # dry run
+docker exec financekitsync python -m app.repair --apply
+```
+
+Both take a backup and write `report.txt` beside it in
+`data/repair-<stamp>/`. Pairs to merge default to accounts sharing institution
+and name; pass `--merge 99B1EC23:0271CEE9 --merge 373EA1D6:CC61535D` to be
+explicit.
+
+## Tests
+
+```bash
+pip install -r requirements.txt pytest httpx
+python -m pytest tests
+```
+
 ## Network boundary
 
-Docker binds `127.0.0.1:8501` only. There is deliberately no Tailscale listener
+The container uses host networking and binds `127.0.0.1:8501` only. There is deliberately no Tailscale listener
 for this port. The iPhone and downstream consumers use Box API's namespaced
 endpoint: `https://$FKS_HOST:8443/api/financekit`.
 

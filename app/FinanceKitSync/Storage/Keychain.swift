@@ -3,7 +3,8 @@
 //  FinanceKitSync
 //
 //  The bearer token is the only secret this app holds. It lives here and
-//  nowhere else — never in UserDefaults, never in logs.
+//  nowhere else — never in UserDefaults, never in logs. The install ID lives
+//  here too, for the Keychain's durability rather than its secrecy.
 //
 import Foundation
 import Security
@@ -30,9 +31,14 @@ enum Keychain {
         return string
     }
 
-    /// Upserts a value. Passing nil deletes the item.
+    /// Upserts a value. Passing nil deletes the item. `accessible` applies
+    /// when the item is first added.
     @discardableResult
-    static func write(_ account: String, _ value: String?) -> Bool {
+    static func write(
+        _ account: String,
+        _ value: String?,
+        accessible: CFString = kSecAttrAccessibleAfterFirstUnlock
+    ) -> Bool {
         guard let value, !value.isEmpty else {
             return delete(account)
         }
@@ -54,7 +60,7 @@ enum Keychain {
         insert[kSecValueData as String] = data
         // afterFirstUnlock, not whenUnlocked: a BGTask can fire while the
         // device is locked, and a token it can't read means a failed sync.
-        insert[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+        insert[kSecAttrAccessible as String] = accessible
         return SecItemAdd(insert as CFDictionary, nil) == errSecSuccess
     }
 

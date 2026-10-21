@@ -14,11 +14,15 @@ struct SyncPacket: Encodable {
     let schemaVersion: Int
     let accounts: [SyncAccount]
     let transactions: [SyncTransaction]
+    /// Lets the server keep record IDs stable across phones and reinstalls.
+    /// Optional on the wire, so the schema version is unchanged.
+    var deviceInstallId: String? = ServerConfig.deviceInstallID
 
     private enum CodingKeys: String, CodingKey {
         case schemaVersion = "schema_version"
         case accounts
         case transactions
+        case deviceInstallId = "device_install_id"
     }
 }
 

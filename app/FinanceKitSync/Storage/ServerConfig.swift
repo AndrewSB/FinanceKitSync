@@ -6,11 +6,30 @@
 //  UI) and a bearer token (secret — Keychain only).
 //
 import Foundation
+import Security
 
 enum ServerConfig {
     private static let baseURLKey = "server_base_url"
     private static let tokenAccount = "server_bearer_token"
     private static let backgroundSyncKey = "background_sync_enabled"
+    private static let installAccount = "device_install_id"
+
+    // MARK: - Install identity
+
+    /// A random UUID minted on first use and kept for the life of this install,
+    /// sent with every packet. FinanceKit IDs are device-local, so the server
+    /// uses this to tell a phone that re-keyed its history from two phones
+    /// syncing at once.
+    ///
+    /// ThisDeviceOnly and never synchronizable: it must not follow a backup or
+    /// iCloud Keychain onto a new phone, or the new phone would pass for the old.
+    static var deviceInstallID: String {
+        if let existing = Keychain.read(installAccount) { return existing }
+        let fresh = UUID().uuidString
+        Keychain.write(installAccount, fresh,
+                       accessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
+        return fresh
+    }
 
     // MARK: - Base URL
 
