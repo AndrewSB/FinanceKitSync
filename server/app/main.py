@@ -169,10 +169,13 @@ def accounts(_: Authenticated) -> dict[str, Any]:
 @app.get("/transactions")
 def transactions(
     _: Authenticated,
-    since: Annotated[str | None, Query(description="ISO-8601 lower bound on date")] = None,
+    since: Annotated[str | None, Query(description="ISO-8601 lower bound on date, inclusive")] = None,
+    until: Annotated[str | None, Query(description="ISO-8601 upper bound on date, inclusive")] = None,
     limit: Annotated[int, Query(ge=1, le=1000)] = 100,
 ) -> dict[str, Any]:
-    return {"transactions": db.list_transactions(since=since, limit=limit)}
+    return {
+        "transactions": db.list_transactions(since=since, until=until, limit=limit)
+    }
 
 
 @app.get("/stats")

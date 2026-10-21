@@ -180,13 +180,35 @@ class Database:
         return [dict(row) for row in rows]
 
     def list_transactions(
-        self, since: str | None = None, limit: int = 100
+        self,
+        since: str | None = None,
+        limit: int = 100,
+        until: str | None = None,
     ) -> list[dict[str, Any]]:
+        """Newest first, within an optional window [since, until], both inclusive.
+
+        ``until`` lets a caller page backwards through more rows than ``limit``
+        by passing the oldest date it just received. It is *inclusive* on
+        purpose: exclusive would drop any row sharing that exact timestamp that
+        did not fit in the previous page, silently and undetectably. Inclusive
+        re-sends the boundary rows instead, which the caller discards by id —
+        a page of overlap is cheap, a lost transaction is not.
+
+        Dates are stored as full ISO-8601 timestamps and compared as strings,
+        which orders correctly and lets a date-only bound like ``2026-08-01``
+        mean the start of that day.
+        """
         query = "SELECT * FROM transactions"
+        clauses: list[str] = []
         params: list[Any] = []
         if since:
-            query += " WHERE date >= ?"
+            clauses.append("date >= ?")
             params.append(since)
+        if until:
+            clauses.append("date <= ?")
+            params.append(until)
+        if clauses:
+            query += " WHERE " + " AND ".join(clauses)
         query += " ORDER BY date DESC LIMIT ?"
         params.append(limit)
 
