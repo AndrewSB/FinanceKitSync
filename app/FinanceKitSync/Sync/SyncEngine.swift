@@ -262,8 +262,8 @@ struct SyncEngine {
     }
 
     /// All FinanceKit accounts plus their latest balances. An account whose
-    /// balance lookup fails is still reported (balance 0) rather than dropped —
-    /// its transactions matter regardless.
+    /// balance isn't known is still reported, with no balance rather than an
+    /// invented one — its transactions matter regardless.
     private static func fetchAccounts(
         log: @Sendable (String) -> Void
     ) async throws -> ([SyncAccount], [UUID: AccountInfo]) {
@@ -276,17 +276,16 @@ struct SyncEngine {
         var syncAccounts: [SyncAccount] = []
         var infoById: [UUID: AccountInfo] = [:]
         for acct in accounts {
-            var balance = Decimal.zero
-            var currency = "USD"
-            do {
-                var amount: CurrencyAmount?
-                if acct.liabilityAccount != nil {
-                    // A liability's available balance is its available credit
-                    // (limit minus what's owed), so it is never the answer. Send
-                    // the booked balance: the amount owed, as a positive number.
-                    amount = try await latestBalance(accountId: acct.id, bookedOnly: true).booked?.amount
-                } else {
-                    let latest = try await latestBalance(accountId: acct.id, bookedOnly: false)
+            var balance: Decimal?
+            var currency = acct.currencyCode
+            // Credit accounts send no balance. FinanceKit's available balance is
+            // available credit, and its booked balance tracks limit minus
+            // available credit: on 2026-10-22 it read 860.81 while Wallet
+            // showed 363.38 owed. Neither is the amount owed.
+            if acct.liabilityAccount == nil {
+                do {
+                    let latest = try await latestBalance(accountId: acct.id)
+                    var amount: CurrencyAmount?
                     switch latest.currentBalance {
                     case .availableAndBooked(let available, let booked):
                         amount = (available.creditDebitIndicator == .credit) ? booked.amount : available.amount
@@ -297,15 +296,15 @@ struct SyncEngine {
                     @unknown default:
                         log("unknown balance type for \(acct.displayName)")
                     }
+                    if let amount {
+                        // Stays Decimal all the way to the JSON encoder; a Double
+                        // turns 13139.19 into 13139.189999999999.
+                        balance = amount.amount
+                        currency = amount.currencyCode
+                    }
+                } catch {
+                    log("no balance for \(acct.displayName): \(error.localizedDescription)")
                 }
-                if let amount {
-                    // Stays Decimal all the way to the JSON encoder; a Double
-                    // turns 13139.19 into 13139.189999999999.
-                    balance = amount.amount
-                    currency = amount.currencyCode
-                }
-            } catch {
-                log("no balance for \(acct.displayName): \(error.localizedDescription)")
             }
             syncAccounts.append(SyncAccount(
                 id: acct.id.uuidString,
@@ -322,9 +321,7 @@ struct SyncEngine {
         return (syncAccounts, infoById)
     }
 
-    /// The newest balance for `accountId` in the last week. With `bookedOnly`,
-    /// the newest one that carries a booked balance.
-    private static func latestBalance(accountId: UUID, bookedOnly: Bool) async throws -> AccountBalance {
+    private static func latestBalance(accountId: UUID) async throws -> AccountBalance {
         let startDate = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
         // No limit: the query is unsorted and spans every account, so a limit
         // keeps an arbitrary subset that can miss an account's newest balance.
@@ -333,7 +330,7 @@ struct SyncEngine {
             predicate: AccountBalanceQuery.predicate(bookedSince: startDate)
         )
         let balances = try await FinanceStore.shared.accountBalances(query: query)
-            .filter { $0.accountID == accountId && (!bookedOnly || $0.booked != nil) }
+            .filter { $0.accountID == accountId }
         guard let latest = balances.max(by: { balanceAsOfDate($0) < balanceAsOfDate($1) }) else {
             throw NSError(domain: "SyncEngine", code: -5, userInfo: [
                 NSLocalizedDescriptionKey: "No balance found"

@@ -84,7 +84,9 @@ class Account(BaseModel):
     id: str
     name: str
     institution: str
-    balance: float
+    # Absent when the app doesn't know it (credit accounts). Stored as NULL:
+    # a stale or invented balance is worse than none.
+    balance: float | None = None
     currency: str
 
 

@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     id           TEXT PRIMARY KEY,
     name         TEXT NOT NULL,
     institution  TEXT NOT NULL,
-    balance      REAL NOT NULL,
+    balance      REAL,
     currency     TEXT NOT NULL,
     updated_at   TEXT NOT NULL
 );
@@ -192,6 +192,7 @@ class Database:
             conn.execute("PRAGMA synchronous=NORMAL")
             conn.executescript(SCHEMA)
             conn.execute("BEGIN IMMEDIATE")
+            self._allow_unknown_balance(conn)
             self._bootstrap(conn)
             conn.execute("COMMIT")
 
@@ -215,6 +216,19 @@ class Database:
             except BaseException:
                 conn.execute("ROLLBACK")
                 raise
+
+    @staticmethod
+    def _allow_unknown_balance(conn: sqlite3.Connection) -> None:
+        """Drops NOT NULL from accounts.balance on databases created before it
+        could be unknown. SQLite can't alter a constraint, so the table is
+        rebuilt. A no-op once done."""
+        columns = {row["name"]: row for row in conn.execute("PRAGMA table_info(accounts)")}
+        if not columns["balance"]["notnull"]:
+            return
+        conn.execute("ALTER TABLE accounts RENAME TO accounts_old")
+        conn.execute(SCHEMA.split(";", 1)[0])  # the accounts table
+        conn.execute("INSERT INTO accounts SELECT id, name, institution, balance, currency, updated_at FROM accounts_old")
+        conn.execute("DROP TABLE accounts_old")
 
     def _bootstrap(self, conn: sqlite3.Connection) -> None:
         """Registers rows stored before identity tracking existed.

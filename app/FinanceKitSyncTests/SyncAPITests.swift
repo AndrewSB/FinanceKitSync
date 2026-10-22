@@ -131,6 +131,17 @@ struct PacketEncodingTests {
         #expect(json.contains(#""balance":13139.19,"#) || json.hasSuffix(#""balance":13139.19}"#))
     }
 
+    @Test("leaves out a balance that isn't known")
+    func unknownBalance() throws {
+        let account = SyncAccount(id: "a", name: "Apple Card", institution: "GS",
+                                  balance: nil, currency: "USD")
+        let json = try JSONSerialization.jsonObject(
+            with: try JSONEncoder().encode(account)
+        ) as! [String: Any]
+        #expect(json["balance"] == nil)
+        #expect(json["currency"] as? String == "USD")
+    }
+
     @Test("decodes the server's receipt")
     func decodesReceipt() throws {
         let receipt = try JSONDecoder().decode(SyncReceipt.self, from: Data(#"""

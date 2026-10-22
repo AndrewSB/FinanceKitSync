@@ -30,7 +30,9 @@ struct SyncAccount: Encodable, Identifiable, Sendable {
     let id: String
     let name: String
     let institution: String
-    let balance: Decimal
+    /// Nil when the balance isn't known (credit accounts, failed lookups);
+    /// the key is then left out of the packet.
+    let balance: Decimal?
     let currency: String
 }
 

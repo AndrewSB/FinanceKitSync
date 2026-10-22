@@ -318,3 +318,36 @@ def test_repair_restores_original_identity(tmp_path, monkeypatch):
     assert result["inserted"] == 0 and result["held"] == 0
     assert set(t["id"] for t in db.list_transactions(limit=1000)) == set(ids)
     assert len(db.list_accounts()) == 3
+
+
+def test_unknown_balance_is_stored_as_null(client):
+    ids, _ = first_device(client)
+    body = packet("install-A", ids, [], {"card": -100.0, "cash": 50.0, "savings": 1000.0})
+    del body["accounts"][0]["balance"]  # the app omits a credit account's balance
+    post(client, body)
+    accounts, _ = snapshot(client)
+    assert {a["id"]: a["balance"] for a in accounts} == {
+        ids["card"]: None, ids["cash"]: 50.0, ids["savings"]: 1000.0,
+    }
+
+
+def test_balance_not_null_is_dropped_from_older_databases(tmp_path):
+    path = tmp_path / "old.db"
+    with sqlite3.connect(path) as conn:
+        conn.execute(
+            """
+            CREATE TABLE accounts (
+                id TEXT PRIMARY KEY, name TEXT NOT NULL, institution TEXT NOT NULL,
+                balance REAL NOT NULL, currency TEXT NOT NULL, updated_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute("INSERT INTO accounts VALUES ('a', 'Apple Card', 'Apple', 860.81, 'USD', 't')")
+    Database(path)
+    Database(path)  # a second open is a no-op
+    with sqlite3.connect(path) as conn:
+        notnull = {r[1]: r[3] for r in conn.execute("PRAGMA table_info(accounts)")}
+        assert notnull["balance"] == 0
+        assert conn.execute("SELECT * FROM accounts").fetchall() == [
+            ("a", "Apple Card", "Apple", 860.81, "USD", "t")
+        ]

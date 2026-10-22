@@ -142,8 +142,10 @@ struct LocalRecordsView: View {
                             Text(account.institution)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            Text(account.balance, format: .currency(code: account.currency))
-                                .font(.callout.monospacedDigit())
+                            if let balance = account.balance {
+                                Text(balance, format: .currency(code: account.currency))
+                                    .font(.callout.monospacedDigit())
+                            }
                         }
                     }
                 }
@@ -255,8 +257,12 @@ private struct AccountRecordDetail: View {
                 LabeledContent("Name", value: account.name)
                 LabeledContent("Institution", value: account.institution)
                 LabeledContent("Balance") {
-                    Text(account.balance, format: .currency(code: account.currency))
-                        .monospacedDigit()
+                    if let balance = account.balance {
+                        Text(balance, format: .currency(code: account.currency))
+                            .monospacedDigit()
+                    } else {
+                        Text("Not reported")
+                    }
                 }
                 LabeledContent("Currency", value: account.currency)
             }
