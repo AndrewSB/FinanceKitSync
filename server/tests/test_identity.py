@@ -7,7 +7,6 @@ import importlib.util
 import json
 import os
 import sqlite3
-import subprocess
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -260,13 +259,9 @@ def test_tripwire_holds_unmatched_history(client):
 
 
 def _old_database(path: Path):
-    """The pre-identity storage module, from git, to build the broken state."""
-    source = subprocess.run(["git", "show", "HEAD:server/app/db.py"], cwd=SERVER,
-                            capture_output=True, text=True, check=True).stdout
+    """The pre-identity storage module, frozen in fixtures, to build the broken state."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    module_path = path.parent / "old_db.py"
-    module_path.write_text(source)
-    spec = importlib.util.spec_from_file_location("old_db", module_path)
+    spec = importlib.util.spec_from_file_location("old_db", Path(__file__).parent / "fixtures" / "pre_identity_db.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module.Database(path)
