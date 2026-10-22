@@ -122,6 +122,15 @@ struct PacketEncodingTests {
         #expect(wallet["merchant_category_code"] as? String == "5814")
     }
 
+    @Test("sends account balances as exact decimals")
+    func exactBalance() throws {
+        // Through a Double this went out as 13139.189999999999.
+        let account = SyncAccount(id: "a", name: "Apple Card", institution: "GS",
+                                  balance: Decimal(string: "13139.19")!, currency: "USD")
+        let json = String(decoding: try JSONEncoder().encode(account), as: UTF8.self)
+        #expect(json.contains(#""balance":13139.19,"#) || json.hasSuffix(#""balance":13139.19}"#))
+    }
+
     @Test("decodes the server's receipt")
     func decodesReceipt() throws {
         let receipt = try JSONDecoder().decode(SyncReceipt.self, from: Data(#"""

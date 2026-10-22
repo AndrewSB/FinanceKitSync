@@ -120,7 +120,7 @@ enum DemoDataset {
         let key: String
         let name: String
         let institution: String
-        let balance: Double
+        let balance: String      // parsed as Decimal, never through a Double
     }
 
     private struct Row {
@@ -138,9 +138,9 @@ enum DemoDataset {
     }
 
     private static let accounts: [Account] = [
-        Account(key: "apple-card", name: "Apple Card", institution: "Goldman Sachs", balance: 1_284.37),
-        Account(key: "apple-cash", name: "Apple Cash", institution: "Green Dot Bank", balance: 212.50),
-        Account(key: "savings", name: "Savings", institution: "Goldman Sachs", balance: 15_320.11),
+        Account(key: "apple-card", name: "Apple Card", institution: "Goldman Sachs", balance: "1284.37"),
+        Account(key: "apple-cash", name: "Apple Cash", institution: "Green Dot Bank", balance: "212.50"),
+        Account(key: "savings", name: "Savings", institution: "Goldman Sachs", balance: "15320.11"),
     ]
 
     /// The most recent transaction lands on this date. Fixed on purpose — see
@@ -227,7 +227,7 @@ enum DemoDataset {
             id: stableUUID("account:\($0.key)"),
             name: $0.name,
             institution: $0.institution,
-            balance: $0.balance,
+            balance: Decimal(string: $0.balance)!,
             currency: "USD"
         )
     }

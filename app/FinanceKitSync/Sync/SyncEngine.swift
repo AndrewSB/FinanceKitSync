@@ -276,23 +276,32 @@ struct SyncEngine {
         var syncAccounts: [SyncAccount] = []
         var infoById: [UUID: AccountInfo] = [:]
         for acct in accounts {
-            var balance = 0.0
+            var balance = Decimal.zero
             var currency = "USD"
             do {
-                let latest = try await latestBalance(accountId: acct.id)
                 var amount: CurrencyAmount?
-                switch latest.currentBalance {
-                case .availableAndBooked(let available, let booked):
-                    amount = (available.creditDebitIndicator == .credit) ? booked.amount : available.amount
-                case .available(let available):
-                    amount = available.amount
-                case .booked(let booked):
-                    amount = booked.amount
-                @unknown default:
-                    log("unknown balance type for \(acct.displayName)")
+                if acct.liabilityAccount != nil {
+                    // A liability's available balance is its available credit
+                    // (limit minus what's owed), so it is never the answer. Send
+                    // the booked balance: the amount owed, as a positive number.
+                    amount = try await latestBalance(accountId: acct.id, bookedOnly: true).booked?.amount
+                } else {
+                    let latest = try await latestBalance(accountId: acct.id, bookedOnly: false)
+                    switch latest.currentBalance {
+                    case .availableAndBooked(let available, let booked):
+                        amount = (available.creditDebitIndicator == .credit) ? booked.amount : available.amount
+                    case .available(let available):
+                        amount = available.amount
+                    case .booked(let booked):
+                        amount = booked.amount
+                    @unknown default:
+                        log("unknown balance type for \(acct.displayName)")
+                    }
                 }
                 if let amount {
-                    balance = NSDecimalNumber(decimal: amount.amount).doubleValue
+                    // Stays Decimal all the way to the JSON encoder; a Double
+                    // turns 13139.19 into 13139.189999999999.
+                    balance = amount.amount
                     currency = amount.currencyCode
                 }
             } catch {
@@ -313,16 +322,18 @@ struct SyncEngine {
         return (syncAccounts, infoById)
     }
 
-    private static func latestBalance(accountId: UUID) async throws -> AccountBalance {
+    /// The newest balance for `accountId` in the last week. With `bookedOnly`,
+    /// the newest one that carries a booked balance.
+    private static func latestBalance(accountId: UUID, bookedOnly: Bool) async throws -> AccountBalance {
         let startDate = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+        // No limit: the query is unsorted and spans every account, so a limit
+        // keeps an arbitrary subset that can miss an account's newest balance.
         let query = AccountBalanceQuery(
             sortDescriptors: [],
-            predicate: AccountBalanceQuery.predicate(bookedSince: startDate),
-            limit: 100,
-            offset: 0
+            predicate: AccountBalanceQuery.predicate(bookedSince: startDate)
         )
         let balances = try await FinanceStore.shared.accountBalances(query: query)
-            .filter { $0.accountID == accountId }
+            .filter { $0.accountID == accountId && (!bookedOnly || $0.booked != nil) }
         guard let latest = balances.max(by: { balanceAsOfDate($0) < balanceAsOfDate($1) }) else {
             throw NSError(domain: "SyncEngine", code: -5, userInfo: [
                 NSLocalizedDescriptionKey: "No balance found"

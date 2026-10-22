@@ -30,7 +30,7 @@ struct SyncAccount: Encodable, Identifiable, Sendable {
     let id: String
     let name: String
     let institution: String
-    let balance: Double
+    let balance: Decimal
     let currency: String
 }
 
